@@ -1,141 +1,450 @@
-# Copyright (c) 2016-2023 Martin Donath <martin.donath@squidfunk.com>
+site_name: GOVSocial Project Documentation
+site_description: 'Documentation for the GOVSocial project'
+site_author: 'Anthony Rodgers'
+site_url: 'https://docs.govsocial.org/'
+edit_uri: 'edit/main/docs/'
 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to
-# deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-# sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
-
-# Project information
-site_name: Material for MkDocs
-site_url: https://squidfunk.github.io/mkdocs-material/
-site_author: Martin Donath
-site_description: >-
-  Write your documentation in Markdown and create a professional static site in
-  minutes – searchable, customizable, for all devices
+# Fail to build if we have broken links
+# strict: true
 
 # Repository
-repo_name: squidfunk/mkdocs-material
-repo_url: https://github.com/squidfunk/mkdocs-material
+repo_name: 'govsocial-org'
+repo_url: 'https://github.com/govsocial-org/govsocial-org.githib.io/'
 
 # Copyright
-copyright: Copyright &copy; 2016 - 2023 Martin Donath
-
-# Configuration
-theme:
-  name: material
-  #custom_dir: material/.overrides
-  features:
-    # - announce.dismiss
-    - content.action.edit
-    - content.action.view
-    - content.code.annotate
-    - content.code.copy
-    # - content.tabs.link
-    - content.tooltips
-    # - header.autohide
-    # - navigation.expand
-    - navigation.footer
-    - navigation.indexes
-    # - navigation.instant
-    # - navigation.prune
-    - navigation.sections
-    - navigation.tabs
-    # - navigation.tabs.sticky
-    - navigation.top
-    - navigation.tracking
-    - search.highlight
-    - search.share
-    - search.suggest
-    - toc.follow
-    # - toc.integrate
-  palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    - scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
-  font:
-    text: Roboto
-    code: Roboto Mono
-  favicon: assets/favicon.png
-  icon:
-    logo: logo
+copyright: 'Copyright &copy; 2023 Anthony Rodgers, GOVSocial'
 
 # Plugins
 plugins:
-  - search:
-      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
-#  - minify:
-#      minify_html: true
+  # privacy:
+  search:
+  minify:
+    minify_html: true
+  git-revision-date-localized:
+    type: date
+  autolinks:
+  macros:
+    verbose: true
+  # htmlproofer:
+    # raise_error: True
+    # raise_error_excludes:
+    #   504: ['https://www.mkdocs.org/']
+    #   404: ['https://github.com/manuzhang/mkdocs-htmlproofer-plugin']
+    #   400: ['*']  
+  # git-committers: # This seems to create double-ups
+  #     repository: geek-cookbook/geek-cookbook
+  #     token: !ENV GH_TOKEN
+  meta-descriptions: # If not provided, auto-generate a description (https://pypi.org/project/mkdocs-meta-descriptions-plugin/)
+  with-pdf:
+    #author: David Young
+    #copyright: ANY TEXT
+    # cover: true
+    back_cover: true
+    #cover_title: TITLE TEXT
+    #cover_subtitle: SUBTITLE TEXT
+    # cover_logo: images/cover_logo.png
+    custom_template_path: with_pdf_template
+    #toc_title: TOC TITLE TEXT
+    #heading_shift: true
+    toc_level: 3
+    ordered_chapter_level: 4
+    excludes_children:
+        - '*/:discourse-comments'
+        - '*/:employ-your-chef-engage'
+        - '*/:flirt-with-waiter-subscribe'
+        - '*/:fn:1'
+    exclude_pages:
+        - 'reference/oauth_proxy/'
+        - 'appendix/contribute/'
+    convert_iframe:
+        - src: IFRAME SRC
+          img: POSTER IMAGE URL
+          text: ALTERNATE TEXT
+        - src: ...
+#    two_columns_level: 3
+    render_js: false
+    # headless_chrome_path: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+    
+    output_path: funkypenguins-geek-cookbook.pdf
+    debug_html: false
+    show_anchors: true
+    verbose: false  
+    enabled_if_env: ENABLE_PDF_EXPORT
 
-# Hooks
-#hooks:
-#  - material/.overrides/hooks/translations.py
+#theme_dir: mkdocs-material
+nav:
+    - Home: index.md         
+    - 🐳 Docker Swarm: 
+      - docker-swarm/index.md
+      - Preparation:
+        - Design: docker-swarm/design.md
+        - Nodes: docker-swarm/nodes.md
+        - Shared Storage (Ceph): docker-swarm/shared-storage-ceph.md
+        - Shared Storage (GlusterFS): docker-swarm/shared-storage-gluster.md
+        - Keepalived: docker-swarm/keepalived.md
+        - Docker Swarm Mode: docker-swarm/docker-swarm-mode.md
+      - Essentials:
+        - Traefik: docker-swarm/traefik.md
+        - Traefik Forward Auth: 
+            - docker-swarm/traefik-forward-auth/index.md 
+            - Dex (static): docker-swarm/traefik-forward-auth/dex-static.md    
+            - Google: docker-swarm/traefik-forward-auth/google.md      
+            - Keycloak: docker-swarm/traefik-forward-auth/keycloak.md
+        - Authelia: docker-swarm/authelia.md
+        - Registry: docker-swarm/registry.md
+        - Mail Server: recipes/mail.md
+        - Duplicity: recipes/duplicity.md
+      - Recipes:
+        - Auto Pirate:
+          - recipes/autopirate/index.md
+          - Headphones: recipes/autopirate/headphones.md
+          - Heimdall: recipes/autopirate/heimdall.md
+          - Jackett: recipes/autopirate/jackett.md
+          - Lazy Librarian: recipes/autopirate/lazylibrarian.md
+          - Lidarr: recipes/autopirate/lidarr.md
+          - Mylar: recipes/autopirate/mylar.md
+          - NZBGet: recipes/autopirate/nzbget.md
+          - NZBHydra: recipes/autopirate/nzbhydra.md
+          - Prowlarr: recipes/autopirate/prowlarr.md          
+          - Ombi: recipes/autopirate/ombi.md
+          - Radarr: recipes/autopirate/radarr.md
+          - Readarr: recipes/autopirate/readarr.md          
+          - Rtorrent: recipes/autopirate/rtorrent.md
+          - SABnzbd: recipes/autopirate/sabnzbd.md
+          - Sonarr: recipes/autopirate/sonarr.md
+          - End: recipes/autopirate/end.md      
+        - Archive Box: recipes/archivebox.md
+        - Bitwarden: recipes/bitwarden.md
+        - Bookstack: recipes/bookstack.md
+        - Calibre-Web: recipes/calibre-web.md
+        - Collabora Online: recipes/collabora-online.md
+        - CyberChef: recipes/cyberchef.md
+        - Duplicati: recipes/duplicati.md
+        - ElkarBackup: recipes/elkarbackup.md
+        - Emby: recipes/emby.md
+        - Home Assistant: recipes/homeassistant.md
+        - Huginn: recipes/huginn.md        
+        - Funkwhale: recipes/funkwhale.md
+        - Ghost: recipes/ghost.md
+        - GitLab: recipes/gitlab.md
+        - GitLab Runner: recipes/gitlab-runner.md
+        - Gollum: recipes/gollum.md
+        - Immich: recipes/immich.md
+        - InstaPy: recipes/instapy.md
+        - Jellyfin: recipes/jellyfin.md
+        - Keycloak: 
+          - recipes/keycloak/index.md      
+          - OIDC Provider: recipes/keycloak/setup-oidc-provider.md        
+          - OpenLDAP: recipes/keycloak/authenticate-against-openldap.md 
+        - Kanboard: recipes/kanboard.md
+        - Kavita: recipes/kavita.md
+        - Keycloak: 
+          - recipes/keycloak/index.md   
+          - OIDC Provider: recipes/keycloak/setup-oidc-provider.md        
+          - OpenLDAP: recipes/keycloak/authenticate-against-openldap.md
+        - Komga: recipes/komga.md
+        - Linx: recipes/linx.md
+        - Mastodon: recipes/mastodon.md
+        - Mealie: recipes/mealie.md
+        - Miniflux: recipes/miniflux.md        
+        - Minio: recipes/minio.md
+        - Munin: recipes/munin.md        
+        - NextCloud: recipes/nextcloud.md        
+        - NightScout: recipes/nightscout.md
+        - OpenLDAP: recipes/openldap.md
+        - OwnTracks: recipes/owntracks.md
+        - Paperless NG: recipes/paperless-ng.md
+        - Photoprism: recipes/photoprism.md
+        - Pixelfed: recipes/pixelfed.md
+        - Plex: recipes/plex.md        
+        - phpIPAM: recipes/phpipam.md        
+        - Portainer: recipes/portainer.md  
+        - PrivateBin: recipes/privatebin.md
+        - Realms: recipes/realms.md
+        - Restic: recipes/restic.md
+        - RSS Bridge: recipes/rss-bridge.md   
+        - Swarmprom: recipes/swarmprom.md              
+        - Tiny Tiny RSS: recipes/tiny-tiny-rss.md
+        - Traefik: docker-swarm/traefik.md
+        - Traefik Forward Auth: 
+            - docker-swarm/traefik-forward-auth/index.md 
+            - Dex (static): docker-swarm/traefik-forward-auth/dex-static.md    
+            - Google: docker-swarm/traefik-forward-auth/google.md      
+            - Keycloak: docker-swarm/traefik-forward-auth/keycloak.md
+        - Wallabag: recipes/wallabag.md
+        - Wekan: recipes/wekan.md
+        - Wetty: recipes/wetty.md       
+      - Reference:
+        - OAuth Proxy: reference/oauth_proxy.md
+        - Data Layout: reference/data_layout.md
+        - Networks: reference/networks.md
+        - OpenVPN : reference/openvpn.md
+        - Troubleshooting: reference/troubleshooting.md         
+    - ⛴ Kubernetes:
+      - Preparation:
+        - kubernetes/index.md
+        - Introduction: kubernetes/index.md
+        - Cluster: 
+          - kubernetes/cluster/index.md
+          - Digital Ocean: kubernetes/cluster/digitalocean.md
+      #     - Bare Metal: kubernetes/cluster/baremetal.md
+      #     - Home Lab: kubernetes/cluster/baremetal.md
+          - k3s: kubernetes/cluster/k3s.md
+      #     - The Hard Way: kubernetes/cluster/the-hard-way.md
+        - Deployment:
+          - kubernetes/deployment/index.md
+      #     - YAML: kubernetes/wip.md
+      #     - Helm: kubernetes/wip.md
+      #     - GitHub Actions: kubernetes/wip.md
+          - Flux: 
+            - kubernetes/deployment/flux/index.md
+            - Install: kubernetes/deployment/flux/install.md
+            - Design: kubernetes/deployment/flux/design.md
+            - Operate: kubernetes/deployment/flux/operate.md
+        - Essentials:
+          - Load Balancer: 
+            - kubernetes/loadbalancer/index.md
+            - k3s: kubernetes/loadbalancer/k3s.md
+            - MetalLB: 
+              - kubernetes/loadbalancer/metallb/index.md
+              - pfSense: kubernetes/loadbalancer/metallb/pfsense.md
+          - Sealed Secrets: kubernetes/sealed-secrets.md
+          - External DNS: kubernetes/external-dns.md
+          - SSL Certificates:
+            - kubernetes/ssl-certificates/index.md
+            - Cert-Manager: kubernetes/ssl-certificates/cert-manager.md
+            - LetsEncrypt Issuers: kubernetes/ssl-certificates/letsencrypt-issuers.md
+            - Wildcard Certificate: kubernetes/ssl-certificates/wildcard-certificate.md
+            - Secret Replicator: kubernetes/ssl-certificates/secret-replicator.md
+          - Ingress:
+            - kubernetes/ingress/index.md
+            - Traefik: 
+              - kubernetes/ingress/traefik/index.md
+              # - Dashboard: kubernetes/ingress/traefik/dashboard.md
+            - Nginx: kubernetes/ingress/nginx.md
+          - Persistence:
+            - kubernetes/persistence/index.md
+            - Local Path Provisioner: kubernetes/persistence/local-path-provisioner.md
+            - TopoLVM: kubernetes/persistence/topolvm.md
+            # - OpenEBS: kubernetes/persistence/openebs.md
+            - Rook Ceph: 
+              - kubernetes/persistence/rook-ceph/index.md
+              - Operator: kubernetes/persistence/rook-ceph/operator.md
+              - Cluster: kubernetes/persistence/rook-ceph/cluster.md
+            # - LongHorn: kubernetes/persistence/longhorn.md    
+      #   - Backup: 
+      #     - kubernetes/backup/index.md
+      #     - kubernetes/wip.md
+      #   - Logging:
+      #     - fluent-bit, graylog, etc.
 
-# Customization
+
+      #   - Monitoring:
+      #     - kubernetes/monitoring/index.md
+      #     - Prometheus: kubernetes/wip.md
+      #     - Grafana: kubernetes/wip.md
+      #     - AlertManager: kubernetes/wip.md
+      #     - Goldilocks: kubernetes/wip.md
+      #   - Reloader: kubernetes/wip.md
+      #   - Dashboard: kubernetes/wip.md
+      #   - Kured: kubernetes/wip.md
+      #   - Keycloak: kubernetes/wip.md
+      - Recipes:
+      #   - Harbor:
+      #     - recipes/kubernetes/harbor/index.md
+      #     Istio: recipes/kubernetes/harbor/istio.md
+        # - GitHub Actions Runners: kubernetes/wip.md
+      #   - Cilium: kubernetes/wip.md
+      #   - Concourse: kubernetes/wip.md
+      #   - Flagger: kubernetes/wip.md
+      #   - Flagger: kubernetes/wip.md
+      #   - Flux: recipes/kubernetes/wip.md
+      #   - FoundationDB: kubernetes/wip.md
+      #   - Istio: recipes/kubernetes/wip.md
+      #   - Jaeger: kubernetes/wip.md
+      #   - Kiali: kubernetes/wip.md
+        - Mastodon: recipes/kubernetes/mastodon.md
+      #   - NGINX Ingress: kubernetes/wip.md
+      #   - Polaris: kubernetes/wip.md
+      #   - Portainer: kubernetes/wip.md
+      #   - Prometheus: kubernetes/wip.md
+      #   - Traefik: kubernetes/wip.md
+      #   - Vault: kubernetes/wip.md
+      #   - Webook Receiver: kubernetes/wip.md
+    - 🚀 Get Premix!:
+      - premix/index.md
+      - Get Started: 
+        - Setup: premix/ansible/operation.md
+        - Deploy!:
+          - Swarm: premix/swarm.md
+          - Kubernetes: premix/kubernetes.md  
+      - Contribute:
+        - Ansiblizing:
+          - premix/ansiblizing/index.md
+          - Swarm: premix/ansiblizing/swarm.md
+          - Kubernetes: premix/ansiblizing/kubernetes.md  
+      - Reference:        
+        - Design: premix/ansible/design.md
+    - ☑️ Reviews:
+      - review/index.md
+      - Immich: review/immich.md  
+      - Mastodon: review/mastodon.md
+      - Nextcloud: review/nextcloud.md          
+    - CHANGELOG: recent-changes.md
+    - Support: support.md      
+    - Contribute: community/contribute.md
+    - Community: 
+      - community/index.md
+      - Support: support.md      
+      - Contribute: community/contribute.md
+      - Code of Conduct: community/code-of-conduct.md 
+      - Discord: community/discord.md 
+      - Reddit: community/reddit.md 
+      - Mastodon: community/mastodon.md 
+      - Forum: community/discourse.md       
+      - GitHub: community/github.md    
+
+theme:
+  name: 'material'
+  custom_dir: 'overrides'
+  # disqus: 'geeks-cookbook'
+  logo: 'images/site-logo.svg'
+  favicon: 'images/site-logo.svg'
+  features:
+      - navigation.tabs
+      - navigation.tabs.sticky  
+      - navigation.instant 
+      - navigation.sections
+      - navigation.indexes
+      - navigation.top
+      - navigation.pruning
+      - search.suggest
+      - search.share
+      - content.code.annotate      
+      - header.autohide
+      - announce.dismiss
+      - toc.follow
+  icon:
+    repo: 'fontawesome/brands/github'
+  palette:
+
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      scheme: default
+      toggle:
+        icon: material/brightness-auto
+        name: Follow system preferences
+
+    # Toggle light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: 'black'
+      accent: 'orange'
+      toggle:
+        icon: material/brightness-7
+        name: Burn my eyes!
+
+    # Toggle dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: 'black'
+      accent: 'orange'
+      toggle:
+        icon: material/brightness-4
+        name: Love my eyes!
+
+  font:
+    text: 'Ubuntu'
+    code: 'Ubuntu Mono'
+
 extra:
-  analytics:
-    provider: google
-    property: !ENV GOOGLE_ANALYTICS_KEY
+  status:
+    new: Recently added
+    deprecated: Deprecated
   social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/squidfunk
-    - icon: fontawesome/brands/gitter
-      link: https://gitter.im/squidfunk/mkdocs-material
-    - icon: fontawesome/brands/docker
-      link: https://hub.docker.com/r/squidfunk/mkdocs-material/
-    - icon: fontawesome/brands/python
-      link: https://pypi.org/project/mkdocs-material/
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/squidfunk
+    - icon: 'fontawesome/brands/mastodon'
+      link: 'https://so.fnky.nz/@funkypenguin'
+    - icon: 'fontawesome/brands/github'
+      link: 'https://github.com/funkypenguin'
+    - icon: 'fontawesome/brands/stack-overflow'
+      link: 'https://stackoverflow.com/cv/funkypenguin'
+    - icon: 'material/rss'
+      link: 'https://www.funkypenguin.co.nz/'
+    - icon: 'fontawesome/brands/linkedin'
+      link: 'https://www.linkedin.com/in/funkypenguin'
+    - icon: 'fontawesome/brands/facebook'
+      link: 'https://www.facebook.com/funkypenguinnz'      
+    - icon: 'material/mailbox'
+      link: 'mailto:davidy@funkypenguin.co.nz?Subject=Hello%2C%20from%20a%20geek-cookbook%20reader%20%3B%29'             
+  generator: false  
+  # Plausible doesn't use cookies, so no need for this!
+  # consent:
+  #   title: 'Would you like a cookie? 🍪'
+  #   description: > 
 
+  #     I know. cookies suck (<I>except the fresh, warm, choc-chip ones!</I>), and so does invasive tracking. Thing is, without cookies, 
+  #     analytics can't record your visit, and I can't work out where/how to invest time to make the cookbook better.
+
+  #     <p>So, with your consent, I'd like to record what you look at and where you're from, so that I can make the 
+  #     cookbook even better. My analytics are public - here's <A HREF='https://plausible.io/geek-cookbook.funkypenguin.co.nz' target="_blank">all</A> I know about you! - David</p>
+  #   cookies:
+  #     custom: Plausible Analytics     
+  analytics:
+    provider: plausible
+    data_domain: geek-cookbook.funkypenguin.co.nz
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! 
+            
+#            Help us improve this page by
+#            using our <a href="..." target=_blank>feedback form</a>.
+
+extra_css:
+  - extras/css/icons.css
+
+extra_javascript:
+  - extras/javascript/plausible.js
+  # - extras/javascript/widgetbot.js # uncommented for dev
+  # - extras/javascript/feedback.js
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  - extras/javascript/tablesort.js
+  
 # Extensions
 markdown_extensions:
-  - abbr
-  - admonition
   - attr_list
-  - def_list
-  - footnotes
-  - md_in_html
+  - admonition
+  - codehilite:
+      linenums: true
   - toc:
       permalink: true
-  - pymdownx.arithmatex:
-      generic: true
+  - footnotes
+  - pymdownx.critic
+  - pymdownx.arithmatex
   - pymdownx.betterem:
       smart_enable: all
   - pymdownx.caret
   - pymdownx.details
+  - pymdownx.snippets:
+      check_paths: true
+      base_path: _snippets
   - pymdownx.emoji:
-      emoji_generator: !!python/name:materialx.emoji.to_svg
       emoji_index: !!python/name:materialx.emoji.twemoji
-  - pymdownx.highlight:
-      anchor_linenums: true
+      emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.inlinehilite
-  - pymdownx.keys
   - pymdownx.magiclink:
       repo_url_shorthand: true
-      user: squidfunk
-      repo: mkdocs-material
+      user: funkypenguin
+      repo: geek-cookbook  
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences:
@@ -143,83 +452,9 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
-
-# Page tree
-nav:
-  - Home: index.md
-  - Getting started:
-    - Installation: getting-started.md
-    - Creating your site: creating-your-site.md
-    - Publishing your site: publishing-your-site.md
-    - Customization: customization.md
-    - Browser support: browser-support.md
-    - Philosophy: philosophy.md
-    - Alternatives: alternatives.md
-    - License: license.md
-    - Bug reporting:
-      - bug-report/index.md
-      - Creating a reproduction: bug-report/reproduction.md
-    - Changelog:
-      - changelog/index.md
-      - How to upgrade: upgrade.md
-  - Setup:
-    - Changing the colors: setup/changing-the-colors.md
-    - Changing the fonts: setup/changing-the-fonts.md
-    - Changing the language: setup/changing-the-language.md
-    - Changing the logo and icons: setup/changing-the-logo-and-icons.md
-    - Ensuring data privacy: setup/ensuring-data-privacy.md
-    - Setting up navigation: setup/setting-up-navigation.md
-    - Setting up site search: setup/setting-up-site-search.md
-    - Setting up site analytics: setup/setting-up-site-analytics.md
-    - Setting up social cards: setup/setting-up-social-cards.md
-    - Setting up a blog: setup/setting-up-a-blog.md
-    - Setting up tags: setup/setting-up-tags.md
-    - Setting up versioning: setup/setting-up-versioning.md
-    - Setting up the header: setup/setting-up-the-header.md
-    - Setting up the footer: setup/setting-up-the-footer.md
-    - Adding a git repository: setup/adding-a-git-repository.md
-    - Adding a comment system: setup/adding-a-comment-system.md
-    - Building an optimized site: setup/building-an-optimized-site.md
-    - Building for offline usage: setup/building-for-offline-usage.md
-    - Extensions:
-      - setup/extensions/index.md
-      - Python Markdown: setup/extensions/python-markdown.md
-      - Python Markdown Extensions: setup/extensions/python-markdown-extensions.md
-    - Dependencies:
-      - setup/dependencies/image-processing.md
-  - Reference:
-    - reference/index.md
-    - Admonitions: reference/admonitions.md
-    - Annotations: reference/annotations.md
-    - Buttons: reference/buttons.md
-    - Code blocks: reference/code-blocks.md
-    - Content tabs: reference/content-tabs.md
-    - Data tables: reference/data-tables.md
-    - Diagrams: reference/diagrams.md
-    - Footnotes: reference/footnotes.md
-    - Formatting: reference/formatting.md
-    - Grids: reference/grids.md
-    - Icons, Emojis: reference/icons-emojis.md
-    - Images: reference/images.md
-    - Lists: reference/lists.md
-    - MathJax: reference/mathjax.md
-    - Tooltips: reference/tooltips.md
-  - Insiders:
-    - insiders/index.md
-    - Getting started:
-      - Installation: insiders/getting-started.md
-      - Changelog: insiders/changelog.md
-  - Blog:
-    - blog/index.md
-    - 2022:
-      - blog/posts/blog-support-just-landed.md
-      - blog/posts/chinese-search-support.md
-    - 2021:
-      - blog/posts/the-past-present-and-future.md
-      - blog/posts/excluding-content-from-search.md
-      - blog/posts/search-better-faster-smaller.md
+  - pymdownx.tabbed  
+  - meta
+  - md_in_html
