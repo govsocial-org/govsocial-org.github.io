@@ -308,8 +308,8 @@ theme:
   name: 'material'
   custom_dir: 'overrides'
   # disqus: 'geeks-cookbook'
-  logo: 'images/site-logo.svg'
-  favicon: 'images/site-logo.svg'
+  logo: 'images/govsocial_logo.png'
+  favicon: 'images/govsocial_logo.png'
   features:
       - navigation.tabs
       - navigation.tabs.sticky  
@@ -331,6 +331,8 @@ theme:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
       scheme: default
+      primary: 'black'
+      accent: 'deep purple'
       toggle:
         icon: material/brightness-auto
         name: Follow system preferences
@@ -339,7 +341,7 @@ theme:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: 'black'
-      accent: 'orange'
+      accent: 'deep purple'
       toggle:
         icon: material/brightness-7
         name: Burn my eyes!
@@ -348,7 +350,7 @@ theme:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: 'black'
-      accent: 'orange'
+      accent: 'deep purple'
       toggle:
         icon: material/brightness-4
         name: Love my eyes!
@@ -363,19 +365,15 @@ extra:
     deprecated: Deprecated
   social:
     - icon: 'fontawesome/brands/mastodon'
-      link: 'https://so.fnky.nz/@funkypenguin'
+      link: 'https://mstdn.ca/@cunningpike'
     - icon: 'fontawesome/brands/github'
-      link: 'https://github.com/funkypenguin'
-    - icon: 'fontawesome/brands/stack-overflow'
-      link: 'https://stackoverflow.com/cv/funkypenguin'
+      link: 'https://github.com/govsocial-org'
     - icon: 'material/rss'
-      link: 'https://www.funkypenguin.co.nz/'
+      link: 'https://docs.govsocial.org/'
     - icon: 'fontawesome/brands/linkedin'
-      link: 'https://www.linkedin.com/in/funkypenguin'
-    - icon: 'fontawesome/brands/facebook'
-      link: 'https://www.facebook.com/funkypenguinnz'      
+      link: 'https://www.linkedin.com/in/anthonylrodgers'
     - icon: 'material/mailbox'
-      link: 'mailto:davidy@funkypenguin.co.nz?Subject=Hello%2C%20from%20a%20geek-cookbook%20reader%20%3B%29'             
+      link: 'mailto:cunningpike@gmail.com'             
   generator: false  
   # Plausible doesn't use cookies, so no need for this!
   # consent:

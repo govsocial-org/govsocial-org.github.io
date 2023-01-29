@@ -1,6 +1,6 @@
 ---
 #template: home.html
-title: Material for MkDocs
+title: GOVSocial Documentation
 ---
 
-Welcome to Material for MkDocs.
+Welcome to GOVSocial!
