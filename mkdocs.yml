@@ -79,10 +79,12 @@ nav:
       - Preparation:
         - Creating the Cluster: building/cluster.md
         - DNS Domains: building/domains.md
+        - Transactional Email: building/email.md
         - S3 Storage: building/storage.md
         - PostgreSQL: building/postgresql.md
         - Flux/Helm: building/fluxhelm.md
-        #- Mastodon:
+      - Platform Installs:
+        - Mastodon: building/mastodon.md
         - Nodes: docker-swarm/nodes.md
         - Shared Storage (Ceph): docker-swarm/shared-storage-ceph.md
         - Shared Storage (GlusterFS): docker-swarm/shared-storage-gluster.md

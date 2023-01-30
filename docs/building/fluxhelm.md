@@ -12,13 +12,13 @@ One of the best decisions we made as we started our first platform install (Mast
 To start, you will need to [install the Flux CLI](https://fluxcd.io/flux/installation/#install-the-flux-cli). Rather than install locally, we spun up an `e2-micro` VM in Google Compute Engine to host this, `kubectl`, and the other tools we would need for our build. Rather than messing with the Docker image, we installed the binaries with:
 
 ```bash
-~ ❯ curl -s https://fluxcd.io/install.sh | sudo bash
+~$ curl -s https://fluxcd.io/install.sh | sudo bash
 ```
 
 **NOTE:** To run `flux-cli` from a [Compute Engine VM](https://cloud.google.com/compute/docs/instances/create-start-instance), your `Compute Engine default service account` needs the `Kubernetes Engine Admin` role. You can edit the roles assigned to service account principals in [IAM](https://cloud.google.com/iam/docs/granting-changing-revoking-access#single-role). You should also get used to running this each time you connect to your VM:
 
 ```bash
-~ ❯ gcloud container clusters get-credentials {cluster_name} --region {region}
+~$ gcloud container clusters get-credentials {cluster_name} --region {region}
 ```
 
 This will authenticate you to your cluster.
@@ -41,7 +41,7 @@ By default, the PAT will expire every 30 days. You will get an email from GitHub
 
 - Delete the auth secret from the cluster with:
 ```bash
-~ ❯ kubectl -n flux-system delete secret flux-system
+~$ kubectl -n flux-system delete secret flux-system
 ```
 - Rerun flux bootstrap with the same args as you use to set it up
 - flux will generate a new secret and will update the deploy key if you’re using SSH deploy keys (you will be). You should get another email from GitHub telling you that a new SSH key has been created, and you're all set.
@@ -51,7 +51,7 @@ By default, the PAT will expire every 30 days. You will get an email from GitHub
 Bootstrap Flux on your cluster by running the following:
 
 ```bash
-~ ❯ flux bootstrap github \
+~$ flux bootstrap github \
       --owner={my-github-username} \
       --repository={my-repository} \
       --path=clusters/{my-cluster} \
@@ -64,7 +64,8 @@ You will be prompted for your PAT, which you can copy from where you stored it a
 If all goes well, you should see the following by typing `kubectl get pods -n flux-system` at the command prompt:
 
 ```bash
-~ ❯ kubectl get pods -n flux-system
+~$ kubectl get pods -n flux-system
+
 helm-controller-564bf65b8b-fswms           1/1     Running     0
 kustomize-controller-7cbf46474d-5qxnw      1/1     Running     0
 notification-controller-7b665fb8bd-t9vmr   1/1     Running     0
@@ -79,23 +80,23 @@ Having successfully carried out the above steps, you will now have started a Flu
 /clusters
   |/{cluster1}
     |/flux-system # <-- This controls the Flux installation on the cluster
-      |/[git|helm]repositories # <-- This is where the Helm chart sources for the platforms are defined
-      |/namespaces # <-- This is where the k8s namespaces for the platforms are defined
-      |/kustomizations
-        |kustomization-{platform1}.yaml #)     We create these when we deploy platforms like Mastodon
-        |kustomization-{platform3}.yaml #) <-- They tell flux to look in the matching folder in the
-        |kustomization-{platform4}.yaml #)     repo root for instructions
+    |/[git|helm]repositories # <-- This is where the Helm chart sources for the platforms are defined
+    |/namespaces # <-- This is where the k8s namespaces for the platforms are defined
+    |/kustomizations
+      |kustomization-{platform1}.yaml #)     We create these when we deploy platforms like Mastodon
+      |kustomization-{platform3}.yaml #) <-- They tell flux to look in the matching directory in the
+      |kustomization-{platform4}.yaml #)     repo root for instructions
   |/{cluster2}
     |/flux-system # <-- This controls the Flux installation on the cluster
-      |/[git|helm]repositories # <-- This is where the Helm chart sources for the platforms are defined
-      |/namespaces # <-- This is where the k8s namespaces for the platforms are defined
-      |/kustomizations
-        |kustomization-{platform2}.yaml #)     We create these when we deploy platforms like Mastodon
-        |kustomization-{platform5}.yaml #) <-- They tell flux to look in the matching folder in the
-        |kustomization-{platform6}.yaml #)     repo root for instructions
-/{platform1} #)
-/{platform2} #)
-/{platform3} #) <--We create these to hold configuration details for each platform
+    |/[git|helm]repositories # <-- This is where the Helm chart sources for the platforms are defined
+    |/namespaces # <-- This is where the k8s namespaces for the platforms are defined
+    |/kustomizations
+      |kustomization-{platform2}.yaml #)     We create these when we deploy platforms like Mastodon
+      |kustomization-{platform5}.yaml #) <-- They tell flux to look in the matching directory in the
+      |kustomization-{platform6}.yaml #)     repo root for instructions               |
+/{platform1} #)                                                                       |
+/{platform2} #)                                                                       |
+/{platform3} #) <--We create these to hold configuration details for each platform <--|
 /{platform4} #)
 /{platform5} #)
 /{platform6} #)

@@ -10,3 +10,5 @@ As with S3-compatible storage, most Fediverse platforms require a PostgreSQL dat
 We used a Google CloudSQL PostgreSQL instance, selecting the smallest possible machine (`db-f1-micro`) and set the storage to `auto-grow`.
 
 You will need to ensure that you enable the [Private IP](https://cloud.google.com/sql/docs/postgres/connect-instance-private-ip#create-instance) interface for the instance so the GKE cluster can reach it. We did not enable the [CloudSQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/sql-proxy) - we may eventually do that at some point.
+
+We chose to create a separate database and user for each platform, rather than piling everything into the default `postgres` one.
