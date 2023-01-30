@@ -9,7 +9,7 @@ edit_uri: 'edit/main/docs/'
 
 # Repository
 repo_name: 'govsocial-org.github.io'
-repo_url: 'https://github.com/govsocial-org/'
+repo_url: 'https://github.com/govsocial-org/govsocial-org.github.io/'
 
 # Copyright
 copyright: 'Copyright &copy; 2023 Anthony Rodgers, GOVSocial'
