@@ -74,10 +74,15 @@ plugins:
 #theme_dir: mkdocs-material
 nav:
     - Home: index.md         
-    - 🐳 Docker Swarm: 
-      - docker-swarm/index.md
+    - Building GOVSocial: 
+      - building/index.md
       - Preparation:
-        - Design: docker-swarm/design.md
+        - Creating the Cluster: building/cluster.md
+        - DNS Domains: building/domains.md
+        - S3 Storage: building/storage.md
+        - PostgreSQL: building/postgresql.md
+        - Flux/Helm: building/fluxhelm.md
+        #- Mastodon:
         - Nodes: docker-swarm/nodes.md
         - Shared Storage (Ceph): docker-swarm/shared-storage-ceph.md
         - Shared Storage (GlusterFS): docker-swarm/shared-storage-gluster.md
@@ -180,7 +185,7 @@ nav:
         - Networks: reference/networks.md
         - OpenVPN : reference/openvpn.md
         - Troubleshooting: reference/troubleshooting.md         
-    - ⛴ Kubernetes:
+    - Operations:
       - Preparation:
         - kubernetes/index.md
         - Introduction: kubernetes/index.md
@@ -271,7 +276,7 @@ nav:
       #   - Traefik: kubernetes/wip.md
       #   - Vault: kubernetes/wip.md
       #   - Webook Receiver: kubernetes/wip.md
-    - 🚀 Get Premix!:
+    - Financials:
       - premix/index.md
       - Get Started: 
         - Setup: premix/ansible/operation.md
@@ -308,7 +313,7 @@ theme:
   name: 'material'
   custom_dir: 'overrides'
   # disqus: 'geeks-cookbook'
-  logo: 'images/govsocial_logo.png'
+  logo: 'images/govsocial_logo_white.png'
   favicon: 'images/govsocial_logo.png'
   features:
       - navigation.tabs
@@ -331,7 +336,7 @@ theme:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
       scheme: default
-      primary: 'black'
+      primary: 'deep purple'
       accent: 'deep purple'
       toggle:
         icon: material/brightness-auto
@@ -340,7 +345,7 @@ theme:
     # Toggle light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: 'black'
+      primary: 'deep purple'
       accent: 'deep purple'
       toggle:
         icon: material/brightness-7
@@ -349,7 +354,7 @@ theme:
     # Toggle dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: 'black'
+      primary: 'deep purple'
       accent: 'deep purple'
       toggle:
         icon: material/brightness-4
