@@ -72,7 +72,7 @@ spec:
 #      namespace: mastodon
 ```
 
-The `spec.path` entry refers to a `./mastodon` directory at the root of **our** repository. This tells Flux to look in there for the configuration information for the build (we'll create that in just a moment).
+The `spec.path:` entry refers to a `./mastodon` directory at the root of **our** repository. This tells Flux to look in there for the configuration information for the build (we'll create that in just a moment).
 
 **NOTE:** The Cookbook example includes a `healthChecks` entry for `mastodon-sidekiq`. This doesn't work with the Mastodon Helm chart as there is no listener in the deployed pod, so we commented it out.
 
@@ -80,13 +80,13 @@ The `spec.path` entry refers to a `./mastodon` directory at the root of **our** 
 
 This is where the magic really happens. We have told Flux to look in the `./mastodon` directory in our GitHub respository that we [bootstrapped Flux](/building/fluxhelm#bootstrap-flux) with earlier. Now, we populate that directory with the special sauce that makes the whole build work.
 
-### ConfigMaps
+### ConfigMap
 
 A [Kubernetes ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) is a set of name-value pairs that acts as a sort of configuration file for the services in your running pods. Because local storage in Kubernetes pods is ephemeral (it gets detroyed and re-created when the pod redeploys), we need a permanent way to store configuration information outside the pod's local file system.
 
 The ConfigMap takes the place of the flat file called `.env.production` in the Mastodon directory of a server-based system that would be lost when the pod restarts in a Kubernetes-based system. The Mastodon Helm chart creates this flat file in each pod from the contents of the ConfigMap.
 
-A Helm chart comes with a `values.yaml` file that is the analog of a default configuration file. We want to set those default values to the ones we want, so we use our own ConfigMap to "override" the default values. Just like we edit a default configuration file to change the values to what we want, our ConfigMap is basically a copy of the default one, with the appropriate values changed. Here is the ConfigMap for our Mastoson instance (comments have been removed for brevity and clarity):
+A Helm chart comes with a `values.yaml` file that is the analog of a default configuration file. We want to set those default values to the ones we want, so we use our own ConfigMap to "override" the default values. Just like we edit a default configuration file to change the values to what we want, our ConfigMap is basically a copy of the default one with the appropriate values changed. Here is the ConfigMap for our Mastoson instance (comments have been removed for brevity and clarity):
 
 ```yaml title="/mastodon/configmap-mastodon-helm-chart-value-overrides.yaml"
 apiVersion: v1
@@ -291,32 +291,79 @@ data:
 
 and then paste in the rest of it underneath from the `values.yaml` from the Helm chart repo you used, being careful to indent everything you paste in by 4 spaces ([YAML](https://yaml.org/spec/1.2.2/) is picky about indentation).
 
+#### General
+
+You will want to set the `local_domain:` (and `web_domain:`, if it's different) values to those you configured when [preparing your DNS domains](/building/domains/).
+
+You will also need to pick the `username:` and `email:` for the Mastodon account that will be the initial admin user for the instance. You can add other users to various roles in the instance once it's running.
+
+**NOTE:** Our install didn't create this user - if this happens to you, there is a workaround that you can do once your instance is running.
+
+#### Secrets
+
+Mastodon uses a set of secrets for client/server authentication, 2FA, and authentication between its various services. Here is the relevant section of the ConfigMap:
+
+```yaml
+secrets:
+  secret_key_base: "[redacted]"
+  otp_secret: "[redacted]"
+  vapid:
+    private_key: "[redacted]"
+    public_key: "[redacted]"
+  # -- you can also specify the name of an existing Secret
+  # with keys SECRET_KEY_BASE and OTP_SECRET and
+  # VAPID_PRIVATE_KEY and VAPID_PUBLIC_KEY
+  existingSecret: ""
+```
+
+To obtain the `secret_key_base:` and `otp_secret:` values, you will need to install the `rake` package from the package manager on your CLI machine. Create a file named `rakefile` in your working directory with these contents:
+
+```ruby title="rakefile"
+desc 'Generate a cryptographically secure secret key (this is typically used to generate a secret for cookie sessions).'
+task :secret do
+  require 'securerandom'
+  puts SecureRandom.hex(64)
+end
+```
+
+Then, run `rake secret` twice, once for the `secret_key_base`, and once for the `otp_secret`, and paste the values into your ConfigMap.
+
+The `vapid` key is a public/private keypair. We used an [online Vapid key generator](https://www.attheminute.com/us/vapid-key-generator) for these.
+
+#### Ingress
+
+Note that the `ingress.enabled:` value is set to `false`. The chart doesn't contain a spec for the GKE Ingress, and we created ours by hand once our instance was up and running.
+
+#### Elastic Search
+
+We also left `elasticsearch.enabled:` set to `false`. Elastic requires its own cluster, which would have increased our initial hosting costs considerably. We may add this feature (which allows users to perform full-text searches on their timelines) at some point.
+
 Now, let's walk through the specifics of how we configured Mastodon to deploy with the various services (AWS SES, Cloud Storage, and Cloud SQL) that we prepared earlier.
 
-#### AWS SES
+#### SMTP
 
 Here is the section of our ConfigMap that relates to the AWS SES service we [prepared earlier](/building/email#setting-up-aws-ses):
 
 ```yaml
-      smtp:
-        auth_method: plain
-        ca_file: /etc/ssl/certs/ca-certificates.crt
-        delivery_method: smtp
-        domain: notifications.govsocial.org
-        enable_starttls: 'never'
-        enable_starttls_auto: false
-        from_address: mastodon@notifications.govsocial.org
-        openssl_verify_mode: none
-        port: 465
-        reply_to:
-        server: email-smtp.us-east-2.amazonaws.com
-        ssl: false
-        tls: true
-        login: [redacted]
-        password: [redacted]
-        # -- you can also specify the name of an existing Secret
-        # with the keys login and password
-        existingSecret:
+smtp:
+  auth_method: plain
+  ca_file: /etc/ssl/certs/ca-certificates.crt
+  delivery_method: smtp
+  domain: notifications.govsocial.org
+  enable_starttls: 'never'
+  enable_starttls_auto: false
+  from_address: mastodon@notifications.govsocial.org
+  openssl_verify_mode: none
+  port: 465
+  reply_to:
+  server: email-smtp.us-east-2.amazonaws.com
+  ssl: false
+  tls: true
+  login: [redacted]
+  password: [redacted]
+# -- you can also specify the name of an existing Secret
+# with the keys login and password
+existingSecret:
 ```
 
 This took a surprising amount of trial and error to get working. If you have problems, and you have managed to get the rest of your Mastodon instance running, the Sidekiq Retries queue (in the `Administration` settings in Mastodon) is your friend. It will provide you with useful error messages to help you troubleshoot the problem.
@@ -330,23 +377,23 @@ The tricky part was getting the connection to work. We could not get `STARTTLS` 
 Here is the section of our ConfigMap that relates to the S3-compatible storage we [prepared earlier](/building/storage/):
 
 ```yaml
-      s3:
-        enabled: true
-        force_single_request: true
-        access_key: "[redacted]"
-        access_secret: "[redacted]"
-        # -- you can also specify the name of an existing Secret
-        # with keys AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-        existingSecret: ""
-        bucket: "mastodongov"
-        endpoint: "https://storage.googleapis.com"
-        hostname: "storage.googleapis.com"
-        region: "us"
-        # -- If you have a caching proxy, enter its base URL here.
-        alias_host: ""
+s3:
+  enabled: true
+  force_single_request: true
+  access_key: "[redacted]"
+  access_secret: "[redacted]"
+  # -- you can also specify the name of an existing Secret
+  # with keys AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+  existingSecret: ""
+  bucket: "mastodongov"
+  endpoint: "https://storage.googleapis.com"
+  hostname: "storage.googleapis.com"
+  region: "us"
+  # -- If you have a caching proxy, enter its base URL here.
+  alias_host: ""
 ```
 
-You'll paste in the `access_key` and `access_secret` values from the [HMAC key](https://cloud.google.com/storage/docs/authentication/managing-hmackeys) that you created for your Cloud Storage bucket, and set `bucket` to the name you chose for it.
+You'll paste in the `access_key:` and `access_secret:` values from the [HMAC key](https://cloud.google.com/storage/docs/authentication/managing-hmackeys) that you created for your Cloud Storage bucket, and set `bucket` to the name you chose for it.
 
 The only catch we stumbled on when getting this to work was the addition of `force_single_request: true`, as Google Cloud Storage cannot handle chunked requests.
 
@@ -355,33 +402,33 @@ The only catch we stumbled on when getting this to work was the addition of `for
 Here is the section of our ConfigMap that relates to the PostgreSQL database we [prepared earlier](/building/postgres/):
 
 ```yaml
-    postgresql:
-      # -- disable if you want to use an existing db; in which case the values below
-      # must match those of that external postgres instance
-      enabled: false
-      postgresqlHostname: [redacted]
-      postgresqlPort: 5432
-      auth:
-        database: mastodongov
-        username: mastodon
-        # you must set a password; the password generated by the postgresql chart will
-        # be rotated on each upgrade:
-        # https://github.com/bitnami/charts/tree/master/bitnami/postgresql#upgrade
-        password: "[redacted]"
-        # Set the password for the "postgres" admin user
-        # set this to the same value as above if you've previously installed
-        # this chart and you're having problems getting mastodon to connect to the DB
-        postgresPassword: "[redacted]"
-        # you can also specify the name of an existing Secret
-        # with a key of password set to the password you want
-        # existingSecret: ""
+postgresql:
+  # -- disable if you want to use an existing db; in which case the values below
+  # must match those of that external postgres instance
+  enabled: false
+  postgresqlHostname: [redacted]
+  postgresqlPort: 5432
+  auth:
+  database: mastodongov
+  username: mastodon
+  # you must set a password; the password generated by the postgresql chart will
+  # be rotated on each upgrade:
+  # https://github.com/bitnami/charts/tree/master/bitnami/postgresql#upgrade
+  password: "[redacted]"
+  # Set the password for the "postgres" admin user
+  # set this to the same value as above if you've previously installed
+  # this chart and you're having problems getting mastodon to connect to the DB
+  postgresPassword: "[redacted]"
+  # you can also specify the name of an existing Secret
+  # with a key of password set to the password you want
+  # existingSecret: ""
 ```
 
-The first thing to note is that `enabled` is set to `false`. This seems counter-intuitive - after all, we need a PostgreSQL database for the thing to work. In this case, the `enabled` setting really tells the Mastodon deployment whether or not to create a new database locally in the cluster or not. In our deployment, we did not want that - we wanted to use the Cloud SQL database that we already created.
+The first thing to note is that `postgres.enabled:` is set to `false`. This seems counter-intuitive - after all, we need a PostgreSQL database for the thing to work. In this case, the `enabled:` setting really tells the Mastodon deployment whether or not to create a new database locally in the cluster or not. In our deployment, we did not want that - we wanted to use the Cloud SQL database that we already created.
 
-The `postgresqlHostname` setting will be the internal IP address of your PostgreSQL instance.
+The `postgresqlHostname:` setting will be the internal IP address of your PostgreSQL instance.
 
-Remember that we created a separate database for each platform we are running, so we changed the `database` and `username` to match what we created. Because we are also using a different user for the platform database, we needed to set both the `password` (which is the password of the account in the `username` setting) and the `postgresPassword` (which is the password of the default `postgres` account) to the correct values. Mastodon uses each for different database tasks, so it needs both passwords in this configuration.
+Remember that we created a separate database for each platform we are running, so we changed the `database:` and `username:` to match what we created. Because we are also using a different user for the platform database, we needed to set both the `password:` (which is the password of the account in the `username:` setting) and the `postgresPassword:` (which is the password of the default `postgres` account) to the correct values. Mastodon uses each for different database tasks, so it needs both passwords in this configuration.
 
 When you get to the actual deployment and your pods spin up, you will notice a [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) called `mastodon-db-migrate` spin up as well. This job is creating the correct database schema for your instance. Your other mastodon pods may not be available until that job completes.
 
@@ -421,7 +468,7 @@ With all this in place, here is the sequence of events:
 
 **NOTE:** The **platform** repository is itself monitored for changes every `interval: 15m`, and changes in that will also trigger a Flux reconcilliation. If you want to avoid unexpected upgrades, you can specify [a valid `image.tag`](https://hub.docker.com/r/tootsuite/mastodon/tags) in your ConfigMap. This is particularly important now that v4.1 is imminent, and the published Helm Chart could change without warning.
 
-## Install Mastodon
+## Deploy Mastodon
 
 You can either wait for Flux to detect your changes, or you can speed up the process by running the following from your CLI machine:
 
@@ -449,4 +496,64 @@ mastodon-web-56cc95dd99-n524q                 1/1     Running
 mastodon-web-56cc95dd99-vmkxf                 1/1     Running
 ```
 
-That's it! You're done building your Mastodon instance on GKE! Now, we need to make sure people can access it.
+That's it! You're done deploying your Mastodon instance on GKE! Now, we need to make sure people can access it.
+
+## Ingress
+
+You will remember that we did not enable the ingress that is included in the Mastodon Helm chart and instead opted to configure the GKE Ingress by hand.
+
+You can do this in the console by going to `Services & Ingress` in the GKE menu in Google Cloud Console. You will need an `External HTTPS Ingress` with two ingress paths to make Mastodon work properly, especially with mobile applications:
+
+- A path for the `mastodon-streaming` service, with the path set to `/api/v1/streaming`
+- A path for the `mastodon-web` service, with the path set to `/*`
+
+As part of creating an HTTPS ingress, you will need a TLS certificate. We opted to use a Google-manged certificate. The domain for the certificate needs to be for the `web_domain` of the instance (or `local_domain`, if `web_domain` is not set).
+
+The `spec` for the resulting ingress should look like this:
+
+```yaml
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: mastodon-web
+            port:
+              number: 3000
+        path: /*
+        pathType: ImplementationSpecific
+      - backend:
+          service:
+            name: mastodon-streaming
+            port:
+              number: 4000
+        path: /api/v1/streaming
+        pathType: ImplementationSpecific
+```
+
+The Ingress will be allocated an external IP address that you should add as an `A` record for the instance hostname in your DNS record set. Your TLS certificate will not validate until that DNS record propogates (usually within half an hour or so).
+
+Once it's all up and running, you should be able to connect to your instance from your web browser!
+
+## Load Balancer
+
+For GOVSocial.org, we wanted our user accounts to have the scheme `{username}@govsocial.org`, rather than having the full domain of each platform in them, like `{username}@{platform}.govsocial.org`. This means that our `local_domain` in Mastodon is `govsocial.org`, while our `web_domain` is `mastodon.govsocial.org`.
+
+This poses challenges for federation, as any links to user profiles on other instances will intially connect to `govsocial.org` (the `local_domain`) instead of our `web_domain` and will need to be redirected. This redirection is handled by a [`webfinger` service in Mastodon](https://docs.joinmastodon.org/spec/webfinger/).
+
+The load balancer needs to redirect requests for `govsocial.org/.well-known/webfinger` which is where other instances think it is, based on our username scheme, to `mastodon.govsocial.org/.well-known/webfinger` where the service is actually listening.
+
+To do this, we deployed an `HTTPS (classic) Load Balancer` in the `Network Services -> Load Balancing` menu in our Google Cloud Console. The setup is very similar to the [Ingress we set up earlier](#ingress_1). In fact, you will see the load balancer created by the Ingress in the list when you go there. Don't mess with it :-) (if you're the sort of person who can't help pressing buttons that say "DO NOT PUSH", it's okay - anything you change will eventually be reverted by the GKE configuration, but your ingress might be broken until that happens).
+
+Create a new `HTTPS (classic) Load Balancer` (this one supports the hostname and path redirect features we need). Despite the higher cost, we selected the Premium network tier, as it allows for the addition of services like [Cloud Armor](https://cloud.google.com/armor/docs/cloud-armor-overview) and [Cloud CDN](https://cloud.google.com/cdn/docs/overview) if the platform needs it in the future.
+
+For the Frontend configuration, make sure to create a new fixed external IP address and add the corresponding `A` record for `local_domain` in your DNS record set. Because we want to use HTTPS, you will need to create a TLS certificate for your `local_domain`. The certificate won't validate until this DNS record propogates (usually with half an hour or so).
+
+For the Backend configuration, pick the default `kube-system-default-http-backend-80` service (there will be a bunch of letters/numbers before and after it.) This service doesn't have anything listening on it, but it will be used for the mandatory default rule in the rules configuration.
+
+In the `Host and path rules`, create a `Prefix redirect` for your `local_domain`, set the `Host redirect` to your `web_domain`, and the `Paths` to `/.well-known/webfinger`. Select `301 - Moved Permanently` for the response, and make sure that `HTTPS redirect` is enabled.
+
+Save your configuration, and wait for it to become available in the Cloud Console.
+
+**NOTE:** One of the advantages of having this load balancer in conjunction with our domain scheme is that it means that we can use the rest of GOVSocial.org for documentation and non-instance specific content. We created a similar rule in our load balancer for `/*` that redirects to `docs.govsocial.org`, which is what you are reading now. There is a whole other write-up for that!

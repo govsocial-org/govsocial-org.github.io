@@ -5,16 +5,16 @@ title: DNS Domains
 
 # DNS Domains
 
-You will need a public DNS domain for your Fediverse instances. Because we wanted to host more than one Fediverse platform under the GOVSocial umbrella, we choose `govsocial.org` as our root domain, with `{instance}.govsocial.org` as the instance-specific hostname.
+You will need a public DNS domain for your Fediverse instances if you want them to be accessible from the Internet. Because we wanted to host more than one Fediverse platform under the GOVSocial umbrella, we choose `govsocial.org` as our root domain, with `{instance}.govsocial.org` as the instance-specific hostname.
 
 For Mastodon, there are a couple of things to be aware of when choosing a domain in general, and this configuration in particular:
 
 - **Be aware of recent (December 21, 2022) changes to the [Mastodon Trademark Policy](https://joinmastodon.org/trademark)**. You will need written permission from Mastodon gGmbH to use 'Mastodon' or any derivatives (e.g. "mastodoon", "mast0don", "mstdn") in your domain or hostname[^1].
 - **We wanted to have our user accounts use `@govsocial.org` for all our instances** instead of the actual instance hostname. This has implications for how both Mastodon and our load balancer are configured.
 
-Register your domain (we used [Google Domains](https://domains.google/)), set [Google Cloud DNS](https://cloud.google.com/dns/docs/overview/) as the nameserver, and enable DNSSEC. The console will guide you through the steps outlined [here](https://cloud.google.com/dns/docs/set-up-dns-records-domain-name).
+Register your domain (we use [Google Domains](https://domains.google/)), set [Google Cloud DNS](https://cloud.google.com/dns/docs/overview/) as the nameserver, and enable DNSSEC. The console will guide you through the steps outlined [here](https://cloud.google.com/dns/docs/set-up-dns-records-domain-name).
 
-If you are fine with manually creating DNS records for your platforms (which is what we do), you're done at this point.
+If you are fine with manually creating DNS records for your platforms in Cloud DNS (which is what we do), you're done at this point.
 
 ## ExternalDNS
 
@@ -81,12 +81,12 @@ Good, because we're not done.
 
 ### Record Ownership Tracking
 
-You will experience conflicts between the default `TXT` DNS records that ExternalDNS uses to track the DNS records it manages, and any actual `TXT` records that you need (for DMARC, for example). You will need to set the `txtSuffix` value to `"txt"` in the external-dns overrides file to avoid [this issue](https://github.com/kubernetes-sigs/external-dns/issues/262/). `txtPrefix` doesn't seem to work.
+You will experience conflicts between the default `TXT` DNS records that ExternalDNS uses to track the DNS records it manages, and any actual `TXT` records that you need (for [DKIM](https://www.dkim.org/), for example). You will need to set the `txtSuffix:` value to `"txt"` in the external-dns overrides file to avoid [this issue](https://github.com/kubernetes-sigs/external-dns/issues/262/). `txtPrefix:` doesn't seem to work.
 
 Even after all this, we were unable to get two things to work at all:
 
 - An `A` record for our "naked domain"
-- The `MX` and `TXT` records necessary for our custom domain to work with AWS SES.
+- The `MX` and `TXT` records necessary for our custom domain to work with AWS SES
 
 This is the point at which we gave up and reverted to manual DNS record entry. YMMV.
 
