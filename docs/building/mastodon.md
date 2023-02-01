@@ -439,13 +439,15 @@ YMMV with a correctly configured fresh install, but if that happens to you, here
 Connect to the running `mastodon-streaming` pod from your CLI machine by entering this:
 
 ```bash
-~$ kubectl get pods -n mastodon
-
+kubectl get pods -n mastodon
+```
+``` {.bash .no-copy}
 mastodon-streaming-bb578b4bc-gzfr2            1/1     Running     0
 mastodon-streaming-bb578b4bc-nszjf            1/1     Running     0
 mastodon-streaming-bb578b4bc-wsv2l            1/1     Running     0
-
-~$ kubectl exec -it mastodon-streaming-bb578b4bc-wsv2l -n mastodon /bin/sh
+```
+```bash
+kubectl exec -it mastodon-streaming-bb578b4bc-wsv2l -n mastodon /bin/sh
 ```
 
 It doesn't matter which pod you connect to, if there is more than one, like in the example above. Once you are connected to a pod, run the following:
@@ -499,14 +501,15 @@ With all this in place, here is the sequence of events:
 You can either wait for Flux to detect your changes, or you can speed up the process by running the following from your CLI machine:
 
 ```bash
-~$ flux reconcile source git flux-system
+flux reconcile source git flux-system
 ```
 
 You can see the Mastodon pods by running the following from your CLI machine (or looking in your GKE console):
 
 ```bash
-~$ kubectl get pods -n mastodon
-
+kubectl get pods -n mastodon
+```
+``` {.bash .no-copy}
 mastodon-redis-master-0                       1/1     Running
 mastodon-redis-replicas-0                     1/1     Running
 mastodon-redis-replicas-1                     1/1     Running

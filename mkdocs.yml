@@ -35,41 +35,6 @@ plugins:
   #     repository: geek-cookbook/geek-cookbook
   #     token: !ENV GH_TOKEN
   meta-descriptions: # If not provided, auto-generate a description (https://pypi.org/project/mkdocs-meta-descriptions-plugin/)
-  with-pdf:
-    #author: David Young
-    #copyright: ANY TEXT
-    # cover: true
-    back_cover: true
-    #cover_title: TITLE TEXT
-    #cover_subtitle: SUBTITLE TEXT
-    # cover_logo: images/cover_logo.png
-    custom_template_path: with_pdf_template
-    #toc_title: TOC TITLE TEXT
-    #heading_shift: true
-    toc_level: 3
-    ordered_chapter_level: 4
-    excludes_children:
-        - '*/:discourse-comments'
-        - '*/:employ-your-chef-engage'
-        - '*/:flirt-with-waiter-subscribe'
-        - '*/:fn:1'
-    exclude_pages:
-        - 'reference/oauth_proxy/'
-        - 'appendix/contribute/'
-    convert_iframe:
-        - src: IFRAME SRC
-          img: POSTER IMAGE URL
-          text: ALTERNATE TEXT
-        - src: ...
-#    two_columns_level: 3
-    render_js: false
-    # headless_chrome_path: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
-    
-    output_path: funkypenguins-geek-cookbook.pdf
-    debug_html: false
-    show_anchors: true
-    verbose: false  
-    enabled_if_env: ENABLE_PDF_EXPORT
 
 #theme_dir: mkdocs-material
 nav:
@@ -88,113 +53,8 @@ nav:
     - Operations:
       - Mastodon:
         - Admin Access and Roles: operations/roles.md
-        - Introduction: kubernetes/index.md
-        - Cluster: 
-          - kubernetes/cluster/index.md
-          - Digital Ocean: kubernetes/cluster/digitalocean.md
-      #     - Bare Metal: kubernetes/cluster/baremetal.md
-      #     - Home Lab: kubernetes/cluster/baremetal.md
-          - k3s: kubernetes/cluster/k3s.md
-      #     - The Hard Way: kubernetes/cluster/the-hard-way.md
-        - Deployment:
-          - kubernetes/deployment/index.md
-      #     - YAML: kubernetes/wip.md
-      #     - Helm: kubernetes/wip.md
-      #     - GitHub Actions: kubernetes/wip.md
-          - Flux: 
-            - kubernetes/deployment/flux/index.md
-            - Install: kubernetes/deployment/flux/install.md
-            - Design: kubernetes/deployment/flux/design.md
-            - Operate: kubernetes/deployment/flux/operate.md
-        - Essentials:
-          - Load Balancer: 
-            - kubernetes/loadbalancer/index.md
-            - k3s: kubernetes/loadbalancer/k3s.md
-            - MetalLB: 
-              - kubernetes/loadbalancer/metallb/index.md
-              - pfSense: kubernetes/loadbalancer/metallb/pfsense.md
-          - Sealed Secrets: kubernetes/sealed-secrets.md
-          - External DNS: kubernetes/external-dns.md
-          - SSL Certificates:
-            - kubernetes/ssl-certificates/index.md
-            - Cert-Manager: kubernetes/ssl-certificates/cert-manager.md
-            - LetsEncrypt Issuers: kubernetes/ssl-certificates/letsencrypt-issuers.md
-            - Wildcard Certificate: kubernetes/ssl-certificates/wildcard-certificate.md
-            - Secret Replicator: kubernetes/ssl-certificates/secret-replicator.md
-          - Ingress:
-            - kubernetes/ingress/index.md
-            - Traefik: 
-              - kubernetes/ingress/traefik/index.md
-              # - Dashboard: kubernetes/ingress/traefik/dashboard.md
-            - Nginx: kubernetes/ingress/nginx.md
-          - Persistence:
-            - kubernetes/persistence/index.md
-            - Local Path Provisioner: kubernetes/persistence/local-path-provisioner.md
-            - TopoLVM: kubernetes/persistence/topolvm.md
-            # - OpenEBS: kubernetes/persistence/openebs.md
-            - Rook Ceph: 
-              - kubernetes/persistence/rook-ceph/index.md
-              - Operator: kubernetes/persistence/rook-ceph/operator.md
-              - Cluster: kubernetes/persistence/rook-ceph/cluster.md
-            # - LongHorn: kubernetes/persistence/longhorn.md    
-      #   - Backup: 
-      #     - kubernetes/backup/index.md
-      #     - kubernetes/wip.md
-      #   - Logging:
-      #     - fluent-bit, graylog, etc.
-
-
-      #   - Monitoring:
-      #     - kubernetes/monitoring/index.md
-      #     - Prometheus: kubernetes/wip.md
-      #     - Grafana: kubernetes/wip.md
-      #     - AlertManager: kubernetes/wip.md
-      #     - Goldilocks: kubernetes/wip.md
-      #   - Reloader: kubernetes/wip.md
-      #   - Dashboard: kubernetes/wip.md
-      #   - Kured: kubernetes/wip.md
-      #   - Keycloak: kubernetes/wip.md
-      - Recipes:
-      #   - Harbor:
-      #     - recipes/kubernetes/harbor/index.md
-      #     Istio: recipes/kubernetes/harbor/istio.md
-        # - GitHub Actions Runners: kubernetes/wip.md
-      #   - Cilium: kubernetes/wip.md
-      #   - Concourse: kubernetes/wip.md
-      #   - Flagger: kubernetes/wip.md
-      #   - Flagger: kubernetes/wip.md
-      #   - Flux: recipes/kubernetes/wip.md
-      #   - FoundationDB: kubernetes/wip.md
-      #   - Istio: recipes/kubernetes/wip.md
-      #   - Jaeger: kubernetes/wip.md
-      #   - Kiali: kubernetes/wip.md
-        - Mastodon: recipes/kubernetes/mastodon.md
-      #   - NGINX Ingress: kubernetes/wip.md
-      #   - Polaris: kubernetes/wip.md
-      #   - Portainer: kubernetes/wip.md
-      #   - Prometheus: kubernetes/wip.md
-      #   - Traefik: kubernetes/wip.md
-      #   - Vault: kubernetes/wip.md
-      #   - Webook Receiver: kubernetes/wip.md
     - Financials:
-      - premix/index.md
-      - Get Started: 
-        - Setup: premix/ansible/operation.md
-        - Deploy!:
-          - Swarm: premix/swarm.md
-          - Kubernetes: premix/kubernetes.md  
-      - Contribute:
-        - Ansiblizing:
-          - premix/ansiblizing/index.md
-          - Swarm: premix/ansiblizing/swarm.md
-          - Kubernetes: premix/ansiblizing/kubernetes.md  
-      - Reference:        
-        - Design: premix/ansible/design.md
-    - ☑️ Reviews:
-      - review/index.md
-      - Immich: review/immich.md  
-      - Mastodon: review/mastodon.md
-      - Nextcloud: review/nextcloud.md          
+      - financials/index.md
     - CHANGELOG: recent-changes.md
     - Support: support.md      
     - Contribute: community/contribute.md
@@ -212,7 +72,6 @@ nav:
 theme:
   name: 'material'
   custom_dir: 'overrides'
-  # disqus: 'geeks-cookbook'
   logo: 'images/govsocial_logo_white.png'
   favicon: 'images/govsocial_logo.png'
   features:
@@ -225,7 +84,8 @@ theme:
       - navigation.pruning
       - search.suggest
       - search.share
-      - content.code.annotate      
+      - content.code.annotate
+      - content.code.copy      
       - header.autohide
       - announce.dismiss
       - toc.follow

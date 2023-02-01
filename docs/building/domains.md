@@ -43,7 +43,7 @@ error listing resources in GroupVersion \"externaldns.k8s.io/v1alpha1\": the ser
 To fix this, run this from your CLI machine:
 
 ```bash
-~$ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/external-dns/master/docs/contributing/crd-source/crd-manifest.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/external-dns/master/docs/contributing/crd-source/crd-manifest.yaml
 ```
 
 You will also likely encounter this error:
@@ -55,7 +55,7 @@ DNSEndpoint ("dnsendpoints.externaldns.k8s.io is forbidden: User \"system:servic
 To this this one, run this from your CLI machine:
 
 ```bash
-~$ kubctl get clusterrole external-dns-external-dns -o yaml > {file}
+kubctl get clusterrole external-dns-external-dns -o yaml > {file}
 ```
 
 Edit the file (with `vi` or your editor of choice - not getting into *that* debate here!) to add the following lines at the end:
@@ -72,7 +72,7 @@ Edit the file (with `vi` or your editor of choice - not getting into *that* deba
 Then apply the new configuration with:
 
 ```bash
-~$ kubectl apply -f {file}
+kubectl apply -f {file}
 ```
 
 Are we having fun yet?
