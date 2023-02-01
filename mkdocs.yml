@@ -51,23 +51,26 @@ nav:
       - Platform Installs:
         - Mastodon: building/mastodon.md         
     - Operations:
-      - Mastodon:
-        - Admin Access and Roles: operations/roles.md
+      - operations/index.md
+      - General:
+        - Documentation: operations/documentation.md
+      - Instances:
+        - Mastodon: operations/mastodon.md
     - Financials:
       - financials/index.md
-    - CHANGELOG: recent-changes.md
-    - Support: support.md      
-    - Contribute: community/contribute.md
-    - Community: 
-      - community/index.md
-      - Support: support.md      
-      - Contribute: community/contribute.md
-      - Code of Conduct: community/code-of-conduct.md 
-      - Discord: community/discord.md 
-      - Reddit: community/reddit.md 
-      - Mastodon: community/mastodon.md 
-      - Forum: community/discourse.md       
-      - GitHub: community/github.md    
+    #- CHANGELOG: recent-changes.md
+    #- Support: support.md      
+    #- Contribute: community/contribute.md
+    #- Community: 
+    #  - community/index.md
+    #  - Support: support.md      
+    #  - Contribute: community/contribute.md
+    #  - Code of Conduct: community/code-of-conduct.md 
+    #  - Discord: community/discord.md 
+    #  - Reddit: community/reddit.md 
+    #  - Mastodon: community/mastodon.md 
+    #  - Forum: community/discourse.md       
+    #  - GitHub: community/github.md    
 
 theme:
   name: 'material'
