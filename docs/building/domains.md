@@ -10,7 +10,7 @@ You will need a public DNS domain for your Fediverse instances if you want them 
 For Mastodon, there are a couple of things to be aware of when choosing a domain in general, and this configuration in particular:
 
 - **Be aware of recent (December 21, 2022) changes to the [Mastodon Trademark Policy](https://joinmastodon.org/trademark)**. You will need written permission from Mastodon gGmbH to use 'Mastodon' or any derivatives (e.g. "mastodoon", "mast0don", "mstdn") in your domain or hostname[^1].
-- **We wanted to have our user accounts use `@govsocial.org` for all our instances** instead of the actual instance hostname. This has implications for how both Mastodon and our load balancer are configured.
+- **We wanted to have our user accounts use `@govsocial.org` for all our instances** instead of the actual instance hostname. As you will see [later](/building/mastodon/#load-balancer), this has implications for how both Mastodon and our load balancer are configured.
 
 Register your domain (we use [Google Domains](https://domains.google/)), set [Google Cloud DNS](https://cloud.google.com/dns/docs/overview/) as the nameserver, and enable DNSSEC. The console will guide you through the steps outlined [here](https://cloud.google.com/dns/docs/set-up-dns-records-domain-name).
 
@@ -24,7 +24,7 @@ However, if you insist, here are some tips we learned during our efforts to get 
 
 ### Service Account
 
-One of the challenges about deploying in different components of a cloud service provider is granting authenticated access between these components, and particularly between services running in pods on your cluster, and other services such as Cloud DNS.
+One of the challenges about deploying in different components of a cloud service provider is granting authenticated access between these components, particularly between services running in pods on your cluster and other services such as Cloud DNS.
 
 The service accounts inside a GKE cluster are not part of the GCP IAM system that controls access to these other services. To grant services running GKE pods access to those services, the GKE service account in a pod needs to be mapped to an IAM account with the correct roles.
 

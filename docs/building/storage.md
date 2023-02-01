@@ -9,4 +9,4 @@ Most Fediverse platforms require some form of S3-compatible storage for images a
 
 We use [Google Cloud Storage](https://cloud.google.com/storage/docs/discover-object-storage-console) for this. Your bucket will need to be `public`, with `fine-grained` access control, and use the `standard` [storage class](https://cloud.google.com/storage/docs/storage-classes#descriptions).
 
-The service account principal doesn't need any roles - you'll use a [HMAC key](https://cloud.google.com/storage/docs/authentication/managing-hmackeys) for access. **Store this key safely - you will only be shown it once at creation time***.
+The service account principal doesn't need any roles - you'll use a [HMAC key](https://cloud.google.com/storage/docs/authentication/managing-hmackeys) for access. **Store this key safely - you will only be shown it once at creation time**.

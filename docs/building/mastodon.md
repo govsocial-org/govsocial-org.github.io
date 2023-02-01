@@ -40,7 +40,7 @@ metadata:
 
 ## Flux Kustomization
 
-Now, we need to provide the instructions to Flux to connect to **our** repository (that reference was created when we [bootstrapped Flux](/building/fluxhelm#bootstrap-flux)), apply our custom deployment configuration, install it into the namespace, and run some health checks to make sure it worked. This uses a Kubernetes object called a [Kustomization](https://kubectl.docs.kubernetes.io/references/kubectl/kustomize/):
+Now, we need to provide the instructions to Flux to connect to **our** repository (that reference was created when we [bootstrapped Flux](/building/fluxhelm/#bootstrap-flux)), apply our custom deployment configuration, install it into the namespace, and run some health checks to make sure it worked. This uses a Kubernetes object called a [Kustomization](https://kubectl.docs.kubernetes.io/references/kubectl/kustomize/):
 
 ```yaml title="/clusters/{my-cluster}/kustomizations/kustomization-mastodon.yaml"
 apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
@@ -74,11 +74,11 @@ spec:
 
 The `spec.path:` entry refers to a `./mastodon` directory at the root of **our** repository. This tells Flux to look in there for the configuration information for the build (we'll create that in just a moment).
 
-**NOTE:** The Cookbook example includes a `healthChecks` entry for `mastodon-sidekiq`. This doesn't work with the Mastodon Helm chart as there is no listener in the deployed pod, so we commented it out.
+**NOTE:** [The Cookbook example](https://geek-cookbook.funkypenguin.co.nz/recipes/kubernetes/mastodon/#kustomization) includes a `healthChecks` entry for `mastodon-sidekiq`. This doesn't work with the Mastodon Helm chart as there is no listener in the deployed pod, so we commented it out.
 
 ## Custom Configuration
 
-This is where the magic really happens. We have told Flux to look in the `./mastodon` directory in our GitHub respository that we [bootstrapped Flux](/building/fluxhelm#bootstrap-flux) with earlier. Now, we populate that directory with the special sauce that makes the whole build work.
+This is where the magic really happens. We have told Flux to look in the `./mastodon` directory in our GitHub respository that we [bootstrapped Flux](/building/fluxhelm/#bootstrap-flux) with earlier. Now, we populate that directory with the special sauce that makes the whole build work.
 
 ### ConfigMap
 
@@ -342,7 +342,7 @@ Now, let's walk through the specifics of how we configured Mastodon to deploy wi
 
 #### SMTP
 
-Here is the section of our ConfigMap that relates to the AWS SES service we [prepared earlier](/building/email#setting-up-aws-ses):
+Here is the section of our ConfigMap that relates to the AWS SES service we [prepared earlier](/building/email/#setting-up-aws-ses):
 
 ```yaml
 smtp:
@@ -370,7 +370,7 @@ This took a surprising amount of trial and error to get working. If you have pro
 
 The `domain:` setting will be the custom domain that you set up and verified with SES, and the `from_address:` can be any email address from that domain. You should paste the values for `login:` and `password:` from the SMTP Credential you configured in the SES console, remembering that `login:` is the randomly generated account name for the credential, not the name of the account principal itself.
 
-The tricky part was getting the connection to work. We could not get `STARTTLS` on port `587` to work at all, and only got [implicit TLS](https://mailtrap.io/blog/starttls-ssl-tls/) working by setting `enable_starttls:` to `'never'`, `enable_starttls_auto:` to `false`, `openssl_verify_mode:` to `none`, `ssl:` to `false`, and `tls:` to `true`. 
+The tricky part was getting the connection to work. We could not get `STARTTLS` on port `587` to work at all, and only got [implicit TLS](https://mailtrap.io/blog/starttls-ssl-tls/) working by setting `enable_starttls: 'never'`, `enable_starttls_auto: false`, `openssl_verify_mode: none`, `ssl: false`, and `tls: true`. 
 
 #### Cloud Storage
 
@@ -393,7 +393,7 @@ s3:
   alias_host: ""
 ```
 
-You'll paste in the `access_key:` and `access_secret:` values from the [HMAC key](https://cloud.google.com/storage/docs/authentication/managing-hmackeys) that you created for your Cloud Storage bucket, and set `bucket` to the name you chose for it.
+You'll paste in the `access_key:` and `access_secret:` values from the [HMAC key](https://cloud.google.com/storage/docs/authentication/managing-hmackeys) that you created for your Cloud Storage bucket, and set `bucket:` to the name you chose for it.
 
 The only catch we stumbled on when getting this to work was the addition of `force_single_request: true`, as Google Cloud Storage cannot handle chunked requests.
 
@@ -424,13 +424,39 @@ postgresql:
   # existingSecret: ""
 ```
 
-The first thing to note is that `postgres.enabled:` is set to `false`. This seems counter-intuitive - after all, we need a PostgreSQL database for the thing to work. In this case, the `enabled:` setting really tells the Mastodon deployment whether or not to create a new database locally in the cluster or not. In our deployment, we did not want that - we wanted to use the Cloud SQL database that we already created.
+The first thing to note is that `postgres.enabled:` is set to `false`. This seems counter-intuitive - after all, we need a PostgreSQL database for the thing to work. In this case, the `enabled:` setting really tells the Mastodon deployment whether or not to enable a database locally in the cluster or not. In our deployment, we did not want that - we wanted to use the Cloud SQL database that we already created.
 
 The `postgresqlHostname:` setting will be the internal IP address of your PostgreSQL instance.
 
 Remember that we created a separate database for each platform we are running, so we changed the `database:` and `username:` to match what we created. Because we are also using a different user for the platform database, we needed to set both the `password:` (which is the password of the account in the `username:` setting) and the `postgresPassword:` (which is the password of the default `postgres` account) to the correct values. Mastodon uses each for different database tasks, so it needs both passwords in this configuration.
 
-When you get to the actual deployment and your pods spin up, you will notice a [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) called `mastodon-db-migrate` spin up as well. This job is creating the correct database schema for your instance. Your other mastodon pods may not be available until that job completes.
+When you get to the actual [deployment](/building/mastodon/#deploy-mastodon) and your pods spin up, you should notice a [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) called `mastodon-db-migrate` spin up as well. This job is creating the correct database schema for your instance. Your other Mastodon pods may not be available until that job completes.
+
+**NOTE:** You may find that the `mastodon-db-migrate` job doesn't run with `postgres.enabled` set to `false` (although our experience was based on incorrectly setting it to `true` in our initial deployment and desperately trying to switch to Cloud SQL after [deploying Mastodon](/building/mastodon/#deploy-mastodon)[^1] ).
+
+YMMV with a correctly configured fresh install, but if that happens to you, here is how we fixed it. The `mastodon-web` and `mastodon-sidekiq` pods will fail to start, but the `mastodon-streaming` pod will because, unlike the other two, it is not dependent on a database connection. The dirty little secret is that all three pods are running the same Mastodon image, so we can use the running `mastodon-streaming` pod to access a running Mastodon service and the `rails` environment we need.
+
+Connect to the running `mastodon-streaming` pod from your CLI machine by entering this:
+
+```bash
+~$ kubectl get pods -n mastodon
+
+mastodon-streaming-bb578b4bc-gzfr2            1/1     Running     0
+mastodon-streaming-bb578b4bc-nszjf            1/1     Running     0
+mastodon-streaming-bb578b4bc-wsv2l            1/1     Running     0
+
+~$ kubectl exec -it mastodon-streaming-bb578b4bc-wsv2l -n mastodon /bin/sh
+```
+
+It doesn't matter which pod you connect to, if there is more than one, like in the example above. Once you are connected to a pod, run the following:
+
+```sh
+$ export OTP_SECRET=[redacted]
+$ export SECRET_KEY_BASE=[redacted]
+$ RAILS_ENV=production bundle exec rails db:migrate
+```
+
+You should see the `mastodon-db-migrate` job appear in your `Workloads` in the Cloud Console, and this will prepare your database. Once the job is finished, your `mastodon-web` and `mastodon-sidekiq` pods should restart successfully.
 
 ## HelmRelease
 
@@ -500,7 +526,7 @@ That's it! You're done deploying your Mastodon instance on GKE! Now, we need to 
 
 ## Ingress
 
-You will remember that we did not enable the ingress that is included in the Mastodon Helm chart and instead opted to configure the GKE Ingress by hand.
+You will [remember](/building/mastodon/#ingress) that we did not enable the ingress that is included in the Mastodon Helm chart and instead opted to configure the GKE Ingress by hand.
 
 You can do this in the console by going to `Services & Ingress` in the GKE menu in Google Cloud Console. You will need an `External HTTPS Ingress` with two ingress paths to make Mastodon work properly, especially with mobile applications:
 
@@ -542,9 +568,11 @@ For GOVSocial.org, we wanted our user accounts to have the scheme `{username}@go
 
 This poses challenges for federation, as any links to user profiles on other instances will intially connect to `govsocial.org` (the `local_domain`) instead of our `web_domain` and will need to be redirected. This redirection is handled by a [`webfinger` service in Mastodon](https://docs.joinmastodon.org/spec/webfinger/).
 
-The load balancer needs to redirect requests for `govsocial.org/.well-known/webfinger` which is where other instances think it is, based on our username scheme, to `mastodon.govsocial.org/.well-known/webfinger` where the service is actually listening.
+The load balancer needs to redirect requests for `govsocial.org/.well-known/webfinger` (which is where other instances think it is based on our username scheme) to `mastodon.govsocial.org/.well-known/webfinger` (where the service is actually listening).
 
-To do this, we deployed an `HTTPS (classic) Load Balancer` in the `Network Services -> Load Balancing` menu in our Google Cloud Console. The setup is very similar to the [Ingress we set up earlier](#ingress_1). In fact, you will see the load balancer created by the Ingress in the list when you go there. Don't mess with it :-) (if you're the sort of person who can't help pressing buttons that say "DO NOT PUSH", it's okay - anything you change will eventually be reverted by the GKE configuration, but your ingress might be broken until that happens).
+To do this, we deployed an `HTTPS (classic) Load Balancer` in the `Network Services -> Load Balancing` menu in our Google Cloud Console. The setup is very similar to the [Ingress we set up earlier](#ingress_1). In fact, you will see the load balancer created by the Ingress in the list when you go there.
+
+**HINT:** Don't mess with it :-) If you're the sort of person who can't help pressing big red buttons that say "DO NOT PRESS", it's okay - anything you change will eventually be reverted by the GKE configuration, but your ingress might be broken until that happens.
 
 Create a new `HTTPS (classic) Load Balancer` (this one supports the hostname and path redirect features we need). Despite the higher cost, we selected the Premium network tier, as it allows for the addition of services like [Cloud Armor](https://cloud.google.com/armor/docs/cloud-armor-overview) and [Cloud CDN](https://cloud.google.com/cdn/docs/overview) if the platform needs it in the future.
 
@@ -556,4 +584,6 @@ In the `Host and path rules`, create a `Prefix redirect` for your `local_domain`
 
 Save your configuration, and wait for it to become available in the Cloud Console.
 
-**NOTE:** One of the advantages of having this load balancer in conjunction with our domain scheme is that it means that we can use the rest of GOVSocial.org for documentation and non-instance specific content. We created a similar rule in our load balancer for `/*` that redirects to `docs.govsocial.org`, which is what you are reading now. There is a whole other write-up for that!
+**NOTE:** One of the advantages of having this load balancer in conjunction with our domain scheme is that it means that we can use the default path (`/*`) of GOVSocial.org for documentation and non-instance specific content. We created a similar rule in our load balancer for `/*` that redirects to `docs.govsocial.org`, which is what you are reading now. There is a whole other write-up for that!
+
+[^1]: Flux to the rescue again! This was one of the issues (the other was abandoning AutoPilot) that had us delete all the Mastodon workloads and start over. The postgreSQL configuration seems to be particularly "sticky" and, try as we might, we could not get the corrected configuration to take after the initial deployment.

@@ -5,7 +5,7 @@ title: Flux and Helm
 
 # Flux and Helm
 
-One of the best decisions we made as we started our first platform install (Mastodon), was to follow the advice in [The Funky Penguin's Geek Cookbook](https://geek-cookbook.funkypenguin.co.nz/recipes/kubernetes/mastodon/) and use [Flux](https://fluxcd.io/flux/) to bootstrap our cluster and deploy Helm charts and Flux kustomizations from a private GitHub repo. Doing this made it relatively easy to install what we needed from existing [Helm charts](https://helm.sh/#:~:text=What%20is%20Helm%3F,the%20copy%2Dand%2Dpaste). It also allowed us to quickly rebuild our cluster (something we did at least twice!) as we made poor configuration choices and mistakes while we figured things out.
+One of the best decisions we made as we started our first platform install (Mastodon), was to follow the advice in [The Funky Penguin's Geek Cookbook](https://geek-cookbook.funkypenguin.co.nz/recipes/kubernetes/mastodon/) and use [Flux](https://fluxcd.io/flux/) to bootstrap our cluster and deploy [Helm charts](https://helm.sh/) and [Flux Kustomizations](https://fluxcd.io/flux/components/kustomize/kustomization/) from a private GitHub repo. Doing this made it relatively easy to install what we needed from existing Helm charts. It also allowed us to quickly rebuild our cluster (something we did at least twice!) as we made poor configuration choices and mistakes while we figured things out.
 
 ## Install Flux-CLI
 
@@ -18,7 +18,7 @@ To start, you will need to [install the Flux CLI](https://fluxcd.io/flux/install
 **NOTE:** To run `flux-cli` from a [Compute Engine VM](https://cloud.google.com/compute/docs/instances/create-start-instance), your `Compute Engine default service account` needs the `Kubernetes Engine Admin` role. You can edit the roles assigned to service account principals in [IAM](https://cloud.google.com/iam/docs/granting-changing-revoking-access#single-role). You should also get used to running this each time you connect to your VM:
 
 ```bash
-~$ gcloud container clusters get-credentials {cluster_name} --region {region}
+~$ gcloud container clusters get-credentials {my-cluster} --region {region}
 ```
 
 This will authenticate you to your cluster.
@@ -44,7 +44,7 @@ By default, the PAT will expire every 30 days. You will get an email from GitHub
 ~$ kubectl -n flux-system delete secret flux-system
 ```
 - Rerun flux bootstrap with the same args as you use to set it up
-- flux will generate a new secret and will update the deploy key if you’re using SSH deploy keys (you will be). You should get another email from GitHub telling you that a new SSH key has been created, and you're all set.
+- Flux will generate a new secret and will update the deploy key if you’re using SSH deploy keys (you will be). You should get another email from GitHub telling you that a new SSH key has been created, and you're all set.
 
 ### Bootstrap Flux
 
