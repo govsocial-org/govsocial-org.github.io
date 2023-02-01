@@ -50,14 +50,14 @@ nav:
         - Flux/Helm: building/fluxhelm.md
       - Platform Installs:
         - Mastodon: building/mastodon.md         
-    - Operations:
-      - operations/index.md
-      - General:
-        - Documentation: operations/documentation.md
-      - Instances:
-        - Mastodon: operations/mastodon.md
-    - Financials:
-      - financials/index.md
+    #- Operating GOVSocial:
+    #  - operating/index.md
+    #  - General:
+    #    - Documentation: operating/documentation.md
+    #  - Instances:
+    #    - Mastodon: operating/mastodon.md
+    #- Financing GOVSocial:
+    #  - financing/index.md
     #- CHANGELOG: recent-changes.md
     #- Support: support.md      
     #- Contribute: community/contribute.md
