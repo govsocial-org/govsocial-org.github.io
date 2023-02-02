@@ -38,9 +38,7 @@ mastodon-web-6b7fb7f8d4-dvr4j                 1/1     Running
 ```bash
 ~$ kubectl exec -it mastodon-web-6b7fb7f8d4-dvr4j -n mastodon /bin/sh
 ```
-
-It doesn't matter which `mastodon-web` pod you connect to, if there is more than one, like in the example above. Once you are connected to a pod, run the following:
-
+- It doesn't matter which `mastodon-web` pod you connect to, if there is more than one, like in the example above. Once you are connected to a pod, run the following:
 ```sh
 $ RAILS_ENV=production bin/tootctl accounts modify {username} --role Owner
 ```
@@ -86,7 +84,7 @@ To generate the OAuth token for your Mastodon account, go to the `Development` i
 
 Scroll down the list of `Scopes` until you see `admin:read:accounts` and `admin:write:accounts` and check those. You can uncheck everything else in the `Scopes` area.
 
-When you're done, click `Submit`. This will generate and display the OAuth token that you need at the top of the page. The `Client key` and `Client secret` are the values you will need for creating the Tines credential. You don't have to write these down - you'll be able to access them from this menu whenever you need them.
+When you're done, click `Submit`. Edit your newly created application by clicking on it. This will generate and display the OAuth token that you need at the top of the page. The `Client key` and `Client secret` are the values you will need for creating the Tines credential. You don't have to write these down - you'll be able to access them from this menu whenever you need them. Leave this screen open, and switch to your Tines tenant in a different browser tab.
 
 #### Tines Credential
 
@@ -94,7 +92,7 @@ In order for your Tines workflow to authenticate to your Mastodon instance, it w
 
 Give your credential a suitable name, and then get ready to switch back and forth between this screen and your Mastodon `Development` screen as you set this up.
 
-The Tines screen will give you a `Callback URL`. Copy this, click on your newly created `Application` in your Mastodon screen to edit it, and paste the `Callback URL` from Tines into the `Redirect URI` field there. While you are in the Mastodon screen, copy and paste both the `Client key` and `Client secret` from there into the `Client ID` and `Client secret` fields respectively in your Tines screen. When you're done, click `Save` in the Mastodon screen, but leave it open.
+The Tines screen will give you a `Callback URL`. Copy this and paste it into the `Redirect URI` field in your Mastodon screen. While you are in the Mastodon screen, copy and paste both the `Client key` and `Client secret` from there into the `Client ID` and `Client secret` fields respectively in your Tines screen. When you're done, click `Save` in the Mastodon screen, but leave that tab open.
 
 Switch back to Tines, and enter the scopes into the `Scopes` field, exactly like this:
 
@@ -119,6 +117,8 @@ When you click `Save`, Tines will generate its OAuth token and, in your Mastodon
 Workflows in Tines are called "Stories", so click on the `Stories` item in the `Your drafts` part of your Tines menu. To make it easier for you to set everything up, we have exported our Tines workflow as a [JSON](https://www.json.org/json-en.html) file, which you can save locally and import using the `Import` button in this screen[^3].
 
 **NOTE:** You should replace `{my-mastodon-web_domain}`, `{my-credential}`, and `{my-email_address}` with your own values directly in the file **before** importing it. Remember to get rid of the braces `{}` as well!
+
+When you have saved and tested your draft Story, you can publish it in Tines, and you should be all set!
 
 ```json
 {
