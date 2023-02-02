@@ -439,15 +439,16 @@ YMMV with a correctly configured fresh install, but if that happens to you, here
 Connect to the running `mastodon-streaming` pod from your CLI machine by entering this:
 
 ```bash
-kubectl get pods -n mastodon
+~$ kubectl get pods -n mastodon
 ```
 ``` {.bash .no-copy}
-mastodon-streaming-bb578b4bc-gzfr2            1/1     Running     0
-mastodon-streaming-bb578b4bc-nszjf            1/1     Running     0
-mastodon-streaming-bb578b4bc-wsv2l            1/1     Running     0
+NAME                                          READY   STATUS
+mastodon-streaming-bb578b4bc-gzfr2            1/1     Running
+mastodon-streaming-bb578b4bc-nszjf            1/1     Running
+mastodon-streaming-bb578b4bc-wsv2l            1/1     Running
 ```
 ```bash
-kubectl exec -it mastodon-streaming-bb578b4bc-wsv2l -n mastodon /bin/sh
+~$ kubectl exec -it mastodon-streaming-bb578b4bc-wsv2l -n mastodon /bin/sh
 ```
 
 It doesn't matter which pod you connect to, if there is more than one, like in the example above. Once you are connected to a pod, run the following:
@@ -585,8 +586,8 @@ For the Backend configuration, pick the default `kube-system-default-http-backen
 
 In the `Host and path rules`, create a `Prefix redirect` for your `local_domain`, set the `Host redirect` to your `web_domain`, and the `Paths` to `/.well-known/webfinger`. Select `301 - Moved Permanently` for the response, and make sure that `HTTPS redirect` is enabled.
 
-Save your configuration, and wait for it to become available in the Cloud Console.
+Save your configuration, and wait for it to become available in the Cloud Console. Once it does, you should be able to connect to your Mastodon instance in your browser, and start [operating it](/operating/mastodon/).
 
-**NOTE:** One of the advantages of having this load balancer in conjunction with our domain scheme is that it means that we can use the default path (`/*`) of GOVSocial.org for documentation and non-instance specific content. We created a similar rule in our load balancer for `/*` that redirects to `docs.govsocial.org`, which is what you are reading now. There is a whole other write-up for that!
+**NOTE:** One of the advantages of having this load balancer in conjunction with our domain scheme is that it means that we can use the default path (`/*`) of GOVSocial.org for documentation and non-instance specific content. We created a similar rule in our load balancer for `/*` that redirects to `docs.govsocial.org`, which is what you are reading now. There is a whole other write-up for [how we created that](/operating/documentation/)!
 
 [^1]: Flux to the rescue again! This was one of the issues (the other was abandoning AutoPilot) that had us delete all the Mastodon workloads and start over. The postgreSQL configuration seems to be particularly "sticky" and, try as we might, we could not get the corrected configuration to take after the initial deployment.
