@@ -116,252 +116,259 @@ When you click `Save`, Tines will generate its OAuth token and, in your Mastodon
 
 Workflows in Tines are called "Stories", so click on the `Stories` item in the `Your drafts` part of your Tines menu. To make it easier for you to set everything up, we have exported our Tines workflow as a [JSON](https://www.json.org/json-en.html) file, which you can save locally and import using the `Import` button in this screen[^3].
 
-**NOTE:** You should replace `{my-mastodon-web_domain}`, `{my-credential}`, and `{my-email_address}` with your own values directly in the file **before** importing it. Remember to get rid of the braces `{}` as well!
+!!! Note
+    You should replace `{my-mastodon-web_domain}`, `{my-credential}`, and `{my-email_address}` with your own values directly in the file **before** importing it. Remember to get rid of the braces `{}` as well!
 
 When you have saved and tested your draft Story, you can publish it in Tines, and you should be all set!
 
-```json
-{
-  "schema_version": 6,
-  "standard_lib_version": 13,
-  "action_runtime_version": 1,
-  "name": "Auto-approve Mastodon accounts",
-  "description": "Auto-approves pending Mastodon accounts with email addresses in known domains",
-  "guid": "b9700ef606a5f4badfed04ea42155b12",
-  "slug": "auto_approve_mastodon_accounts",
-  "exported_at": "2023-02-02T21:10:22Z",
-  "agents": [
+??? Example "Tines Workflow"
+
+    ```json
     {
-      "type": "Agents::HTTPRequestAgent",
-      "name": "Get Pending User Accounts",
-      "disabled": false,
-      "description": "",
-      "guid": "db1336c590099940d47bb2389b634d2b",
-      "options": {
-        "url": "https://{my-mastodon-web_domain}/api/v2/admin/accounts",
-        "content_type": "application_json",
-        "method": "get",
-        "payload": {
-          "origin": "local",
-          "status": "pending",
-          "limit": 200
-        },
-        "headers": {
-          "Authorization": "Bearer <<CREDENTIAL.{my-credential}>>"
-        }
-      },
-      "reporting": {
-        "time_saved_value": 0,
-        "time_saved_unit": "minutes"
-      },
-      "monitoring": {
-        "monitor_all_events": false,
-        "monitor_failures": false,
-        "monitor_no_events_emitted": null
-      },
-      "width": null,
-      "schedule": [
+      "schema_version": 6,
+      "standard_lib_version": 13,
+      "action_runtime_version": 1,
+      "name": "Auto-approve Mastodon accounts",
+      "description": "Auto-approves pending Mastodon accounts with email addresses in known domains",
+      "guid": "b9700ef606a5f4badfed04ea42155b12",
+      "slug": "auto_approve_mastodon_accounts",
+      "exported_at": "2023-02-02T21:10:22Z",
+      "agents": [
         {
-          "cron": "*/5 * * * *",
-          "timezone": "America/Detroit"
+          "type": "Agents::HTTPRequestAgent",
+          "name": "Get Pending User Accounts",
+          "disabled": false,
+          "description": "",
+          "guid": "db1336c590099940d47bb2389b634d2b",
+          "options": {
+            "url": "https://{my-mastodon-web_domain}/api/v2/admin/accounts",
+            "content_type": "application_json",
+            "method": "get",
+            "payload": {
+              "origin": "local",
+              "status": "pending",
+              "limit": 200
+            },
+            "headers": {
+              "Authorization": "Bearer <<CREDENTIAL.{my-credential}>>"
+            }
+          },
+          "reporting": {
+            "time_saved_value": 0,
+            "time_saved_unit": "minutes"
+          },
+          "monitoring": {
+            "monitor_all_events": false,
+            "monitor_failures": false,
+            "monitor_no_events_emitted": null
+          },
+          "width": null,
+          "schedule": [
+            {
+              "cron": "*/5 * * * *",
+              "timezone": "America/Detroit"
+            }
+          ]
+        },
+        {
+          "type": "Agents::EventTransformationAgent",
+          "name": "Extract Pre-Approved Accounts",
+          "disabled": false,
+          "description": "",
+          "guid": "b2f9f20787f3decfe59cc4f5edb041d9",
+          "options": {
+            "mode": "message_only",
+            "loop": false,
+            "payload": {
+              "pre-approved_accounts": "=FILTER(get_pending_user_accounts.body, LAMBDA(element, MATCH(element.email,\"(.*\\.gov|.*\\.gov\\.au|.*\\.gov\\.uk|.*\\.gc\\.ca)\")))"
+            }
+          },
+          "reporting": {
+            "time_saved_value": 0,
+            "time_saved_unit": "minutes"
+          },
+          "monitoring": {
+            "monitor_all_events": false,
+            "monitor_failures": false,
+            "monitor_no_events_emitted": null
+          },
+          "width": null,
+          "schedule": null
+        },
+        {
+          "type": "Agents::EventTransformationAgent",
+          "name": "Explode Pre-Approved Accounts",
+          "disabled": false,
+          "description": "",
+          "guid": "4368d4a7e09e8b0ba1278435502d6c58",
+          "options": {
+            "mode": "explode",
+            "path": "=extract_pre_approved_accounts[\"pre-approved_accounts\"]",
+            "to": "individual_item"
+          },
+          "reporting": {
+            "time_saved_value": 0,
+            "time_saved_unit": "minutes"
+          },
+          "monitoring": {
+            "monitor_all_events": false,
+            "monitor_failures": false,
+            "monitor_no_events_emitted": null
+          },
+          "width": null,
+          "schedule": null
+        },
+        {
+          "type": "Agents::HTTPRequestAgent",
+          "name": "Approve Pre-Approved Accounts",
+          "disabled": false,
+          "description": "",
+          "guid": "9e5ad0f2d078d50408a3a91e643c8f40",
+          "options": {
+            "url": "https://{my-mastodon-web_domain}/api/v1/admin/accounts/<<explode_pre_approved_accounts.individual_item.id>>/approve",
+            "content_type": "application_json",
+            "method": "post",
+            "headers": {
+              "Authorization": "Bearer <<CREDENTIAL.{my-credential}>>"
+            }
+          },
+          "reporting": {
+            "time_saved_value": 0,
+            "time_saved_unit": "minutes"
+          },
+          "monitoring": {
+            "monitor_all_events": false,
+            "monitor_failures": false,
+            "monitor_no_events_emitted": null
+          },
+          "width": null,
+          "schedule": null
+        },
+        {
+          "type": "Agents::EventTransformationAgent",
+          "name": "Extract Pre-Rejected Accounts",
+          "disabled": false,
+          "description": "",
+          "guid": "fcfe50b2803bc32077c04dce841a33f2",
+          "options": {
+            "mode": "message_only",
+            "loop": false,
+            "payload": {
+              "pre-rejected_accounts": "=FILTER(get_pending_user_accounts.body, LAMBDA(element, MATCH(element.email,\"(.*\\gmail\\.com|.*\\aol\\.com|.*\\yahoo\\.com)\")))"
+            }
+          },
+          "reporting": {
+            "time_saved_value": 0,
+            "time_saved_unit": "minutes"
+          },
+          "monitoring": {
+            "monitor_all_events": false,
+            "monitor_failures": false,
+            "monitor_no_events_emitted": null
+          },
+          "width": null,
+          "schedule": null
+        },
+        {
+          "type": "Agents::EventTransformationAgent",
+          "name": "Explode Pre-Rejected Accounts",
+          "disabled": false,
+          "description": "",
+          "guid": "5c672894c3e6af04e43a7e5b69de1bd9",
+          "options": {
+            "mode": "explode",
+            "path": "=extract_pre_rejected_accounts[\"pre-rejected_accounts\"]",
+            "to": "individual_item"
+          },
+          "reporting": {
+            "time_saved_value": 0,
+            "time_saved_unit": "minutes"
+          },
+          "monitoring": {
+            "monitor_all_events": false,
+            "monitor_failures": false,
+            "monitor_no_events_emitted": null
+          },
+          "width": null,
+          "schedule": null
+        },
+        {
+          "type": "Agents::HTTPRequestAgent",
+          "name": "Reject Pre-Rejected Accounts",
+          "disabled": false,
+          "description": "",
+          "guid": "c1958d276321136a1a86833ec33a87ea",
+          "options": {
+            "url": "https://{my-mastodon-web_domain}/api/v1/admin/accounts/<<explode_pre_rejected_accounts.individual_item.id>>/reject",
+            "content_type": "application_json",
+            "method": "post",
+            "headers": {
+              "Authorization": "Bearer <<CREDENTIAL.{my-credential}>>"
+            }
+          },
+          "reporting": {
+            "time_saved_value": 0,
+            "time_saved_unit": "minutes"
+          },
+          "monitoring": {
+            "monitor_all_events": false,
+            "monitor_failures": false,
+            "monitor_no_events_emitted": null
+          },
+          "width": null,
+          "schedule": null
         }
-      ]
-    },
-    {
-      "type": "Agents::EventTransformationAgent",
-      "name": "Extract Pre-Approved Accounts",
-      "disabled": false,
-      "description": "",
-      "guid": "b2f9f20787f3decfe59cc4f5edb041d9",
-      "options": {
-        "mode": "message_only",
-        "loop": false,
-        "payload": {
-          "pre-approved_accounts": "=FILTER(get_pending_user_accounts.body, LAMBDA(element, MATCH(element.email,\"(.*\\.gov|.*\\.gov\\.au|.*\\.gov\\.uk|.*\\.gc\\.ca)\")))"
+      ],
+      "diagram_notes": [],
+      "links": [
+        {
+          "source": 0,
+          "receiver": 1
+        },
+        {
+          "source": 0,
+          "receiver": 4
+        },
+        {
+          "source": 1,
+          "receiver": 2
+        },
+        {
+          "source": 2,
+          "receiver": 3
+        },
+        {
+          "source": 4,
+          "receiver": 5
+        },
+        {
+          "source": 5,
+          "receiver": 6
         }
-      },
-      "reporting": {
-        "time_saved_value": 0,
-        "time_saved_unit": "minutes"
-      },
-      "monitoring": {
-        "monitor_all_events": false,
-        "monitor_failures": false,
-        "monitor_no_events_emitted": null
-      },
-      "width": null,
-      "schedule": null
-    },
-    {
-      "type": "Agents::EventTransformationAgent",
-      "name": "Explode Pre-Approved Accounts",
-      "disabled": false,
-      "description": "",
-      "guid": "4368d4a7e09e8b0ba1278435502d6c58",
-      "options": {
-        "mode": "explode",
-        "path": "=extract_pre_approved_accounts[\"pre-approved_accounts\"]",
-        "to": "individual_item"
-      },
-      "reporting": {
-        "time_saved_value": 0,
-        "time_saved_unit": "minutes"
-      },
-      "monitoring": {
-        "monitor_all_events": false,
-        "monitor_failures": false,
-        "monitor_no_events_emitted": null
-      },
-      "width": null,
-      "schedule": null
-    },
-    {
-      "type": "Agents::HTTPRequestAgent",
-      "name": "Approve Pre-Approved Accounts",
-      "disabled": false,
-      "description": "",
-      "guid": "9e5ad0f2d078d50408a3a91e643c8f40",
-      "options": {
-        "url": "https://{my-mastodon-web_domain}/api/v1/admin/accounts/<<explode_pre_approved_accounts.individual_item.id>>/approve",
-        "content_type": "application_json",
-        "method": "post",
-        "headers": {
-          "Authorization": "Bearer <<CREDENTIAL.{my-credential}>>"
-        }
-      },
-      "reporting": {
-        "time_saved_value": 0,
-        "time_saved_unit": "minutes"
-      },
-      "monitoring": {
-        "monitor_all_events": false,
-        "monitor_failures": false,
-        "monitor_no_events_emitted": null
-      },
-      "width": null,
-      "schedule": null
-    },
-    {
-      "type": "Agents::EventTransformationAgent",
-      "name": "Extract Pre-Rejected Accounts",
-      "disabled": false,
-      "description": "",
-      "guid": "fcfe50b2803bc32077c04dce841a33f2",
-      "options": {
-        "mode": "message_only",
-        "loop": false,
-        "payload": {
-          "pre-rejected_accounts": "=FILTER(get_pending_user_accounts.body, LAMBDA(element, MATCH(element.email,\"(.*\\gmail\\.com|.*\\aol\\.com|.*\\yahoo\\.com)\")))"
-        }
-      },
-      "reporting": {
-        "time_saved_value": 0,
-        "time_saved_unit": "minutes"
-      },
-      "monitoring": {
-        "monitor_all_events": false,
-        "monitor_failures": false,
-        "monitor_no_events_emitted": null
-      },
-      "width": null,
-      "schedule": null
-    },
-    {
-      "type": "Agents::EventTransformationAgent",
-      "name": "Explode Pre-Rejected Accounts",
-      "disabled": false,
-      "description": "",
-      "guid": "5c672894c3e6af04e43a7e5b69de1bd9",
-      "options": {
-        "mode": "explode",
-        "path": "=extract_pre_rejected_accounts[\"pre-rejected_accounts\"]",
-        "to": "individual_item"
-      },
-      "reporting": {
-        "time_saved_value": 0,
-        "time_saved_unit": "minutes"
-      },
-      "monitoring": {
-        "monitor_all_events": false,
-        "monitor_failures": false,
-        "monitor_no_events_emitted": null
-      },
-      "width": null,
-      "schedule": null
-    },
-    {
-      "type": "Agents::HTTPRequestAgent",
-      "name": "Reject Pre-Rejected Accounts",
-      "disabled": false,
-      "description": "",
-      "guid": "c1958d276321136a1a86833ec33a87ea",
-      "options": {
-        "url": "https://{my-mastodon-web_domain}/api/v1/admin/accounts/<<explode_pre_rejected_accounts.individual_item.id>>/reject",
-        "content_type": "application_json",
-        "method": "post",
-        "headers": {
-          "Authorization": "Bearer <<CREDENTIAL.{my-credential}>>"
-        }
-      },
-      "reporting": {
-        "time_saved_value": 0,
-        "time_saved_unit": "minutes"
-      },
-      "monitoring": {
-        "monitor_all_events": false,
-        "monitor_failures": false,
-        "monitor_no_events_emitted": null
-      },
-      "width": null,
-      "schedule": null
+      ],
+      "diagram_layout": "{\"db1336c590099940d47bb2389b634d2b\":[495,45],\"b2f9f20787f3decfe59cc4f5edb041d9\":[330,135],\"4368d4a7e09e8b0ba1278435502d6c58\":[330,225],\"9e5ad0f2d078d50408a3a91e643c8f40\":[330,330],\"fcfe50b2803bc32077c04dce841a33f2\":[585,135],\"5c672894c3e6af04e43a7e5b69de1bd9\":[585,225],\"c1958d276321136a1a86833ec33a87ea\":[585,330]}",
+      "send_to_story_enabled": false,
+      "entry_agent_guid": null,
+      "exit_agent_guids": [],
+      "exit_agent_guid": null,
+      "keep_events_for": 604800,
+      "reporting_status": true,
+      "send_to_story_access": null,
+      "story_library_metadata": {},
+      "recipients": [
+        "{my-email_address}"
+      ],
+      "story_level_monitoring_enabled": false,
+      "monitor_failures": false,
+      "send_to_stories": [],
+      "form": null,
+      "forms": []
     }
-  ],
-  "diagram_notes": [],
-  "links": [
-    {
-      "source": 0,
-      "receiver": 1
-    },
-    {
-      "source": 0,
-      "receiver": 4
-    },
-    {
-      "source": 1,
-      "receiver": 2
-    },
-    {
-      "source": 2,
-      "receiver": 3
-    },
-    {
-      "source": 4,
-      "receiver": 5
-    },
-    {
-      "source": 5,
-      "receiver": 6
-    }
-  ],
-  "diagram_layout": "{\"db1336c590099940d47bb2389b634d2b\":[495,45],\"b2f9f20787f3decfe59cc4f5edb041d9\":[330,135],\"4368d4a7e09e8b0ba1278435502d6c58\":[330,225],\"9e5ad0f2d078d50408a3a91e643c8f40\":[330,330],\"fcfe50b2803bc32077c04dce841a33f2\":[585,135],\"5c672894c3e6af04e43a7e5b69de1bd9\":[585,225],\"c1958d276321136a1a86833ec33a87ea\":[585,330]}",
-  "send_to_story_enabled": false,
-  "entry_agent_guid": null,
-  "exit_agent_guids": [],
-  "exit_agent_guid": null,
-  "keep_events_for": 604800,
-  "reporting_status": true,
-  "send_to_story_access": null,
-  "story_library_metadata": {},
-  "recipients": [
-    "{my-email_address}"
-  ],
-  "story_level_monitoring_enabled": false,
-  "monitor_failures": false,
-  "send_to_stories": [],
-  "form": null,
-  "forms": []
-}
-```
+    ```
+
+## Server Moderation
+
+As part of creating an
 
 [^1]: We are keen to add more - please [let us know](mailto:cunningpike@gmail.com) if there are any that should be added. Our worldview is regrettably US-centric, and there are likely many others that we have missed.
 [^2]: This list is subject to change without notice, but we will keep our documentation of it, both here and on our instances, up to date.

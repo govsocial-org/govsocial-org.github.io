@@ -11,7 +11,8 @@ In building our Mastodon instance, we basically followed [The Funky Penguin's Ge
 
 The first thing to do is to decide which Helm chart to use. We used the "official" one from [the Mastodon repo](https://github.com/mastodon/chart). As the Cookbook points out, this isn't a Helm repository, but a regular GitHub repository with the Helm chart in it. There is also a [Bitnami Helm chart](https://github.com/bitnami/charts/tree/main/bitnami/mastodon), which did not exist at the time we started (it was created on December 15, 2022), and which we have not tried.
 
-**NOTE:** In all the file examples below, the path is from the root of your repo. Refer to the [Flux repo plan](/building/fluxhelm/#flux-repository-structure) if you're unsure where all the files go.
+!!! Note
+    In all the file examples below, the path is from the root of your repo. Refer to the [Flux repo plan](/building/fluxhelm/#flux-repository-structure) if you're unsure where all the files go.
 
 Having decided which chart to use, you need to create the appropriate repository entry in your Flux repo, so Flux knows where to pull the chart from. Here is the `GitRepository` entry we use for the Mastodon repo chart (there is an example of a [Bitnami Helm repo file](https://geek-cookbook.funkypenguin.co.nz/kubernetes/external-dns/#helmrepository) in the Cookbook):
 
@@ -74,7 +75,8 @@ spec:
 
 The `spec.path:` entry refers to a `./mastodon` directory at the root of **our** repository. This tells Flux to look in there for the configuration information for the build (we'll create that in just a moment).
 
-**NOTE:** [The Cookbook example](https://geek-cookbook.funkypenguin.co.nz/recipes/kubernetes/mastodon/#kustomization) includes a `healthChecks` entry for `mastodon-sidekiq`. This doesn't work with the Mastodon Helm chart as there is no listener in the deployed pod, so we commented it out.
+!!! Note
+    [The Cookbook example](https://geek-cookbook.funkypenguin.co.nz/recipes/kubernetes/mastodon/#kustomization) includes a `healthChecks` entry for `mastodon-sidekiq`. This doesn't work with the Mastodon Helm chart as there is no listener in the deployed pod, so we commented it out.
 
 ## Custom Configuration
 
@@ -88,194 +90,195 @@ The ConfigMap takes the place of the flat file called `.env.production` in the M
 
 A Helm chart comes with a `values.yaml` file that is the analog of a default configuration file. We want to set those default values to the ones we want, so we use our own ConfigMap to "override" the default values. Just like we edit a default configuration file to change the values to what we want, our ConfigMap is basically a copy of the default one with the appropriate values changed. Here is the ConfigMap for our Mastoson instance (comments have been removed for brevity and clarity):
 
-```yaml title="/mastodon/configmap-mastodon-helm-chart-value-overrides.yaml"
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mastodon-helm-chart-value-overrides
-  namespace: mastodon
-data:
-  values.yaml: |-  
-    image:
-      repository: tootsuite/mastodon
-      tag: "v4.0.2"
-      pullPolicy: IfNotPresent
+??? Example "configmap-mastodon-helm-chart-value-overrides.yaml"
+    ```yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: mastodon-helm-chart-value-overrides
+      namespace: mastodon
+    data:
+      values.yaml: |-  
+        image:
+          repository: tootsuite/mastodon
+          tag: "v4.0.2"
+          pullPolicy: IfNotPresent
 
-    mastodon:
-      createAdmin:
-        enabled: true
-        username: [redacted]
-        email: [redacted]
-      cron:
-        removeMedia:
-          enabled: true
-          schedule: "0 0 * * 0"
-      locale: en
-      local_domain: govsocial.org
-      web_domain: mastodon.govsocial.org
-      singleUserMode: false
-      authorizedFetch: false
-      persistence:
-        assets:
-          accessMode: ReadWriteMany
-          resources:
-            requests:
-              storage: 10Gi
-        system:
-          accessMode: ReadWriteMany
-          resources:
-            requests:
-              storage: 100Gi
-      s3:
-        enabled: true
-        force_single_request: true
-        access_key: "[redacted]"
-        access_secret: "[redacted]"
-        existingSecret: ""
-        bucket: "mastodongov"
-        endpoint: "https://storage.googleapis.com"
-        hostname: "storage.googleapis.com"
-        region: "us"
-        alias_host: ""
-      secrets:
-        secret_key_base: "[redacted]"
-        otp_secret: "[redacted]"
-        vapid:
-          private_key: "[redacted]"
-          public_key: "[redacted]"
-        existingSecret: ""
-      sidekiq:
-        podSecurityContext: {}
-        securityContext: {}
-        resources: {}
-        affinity: {}
-        workers:
-        - name: all-queues
-          concurrency: 25
-          replicas: 1
-          resources: {}
-          affinity: {}
-          queues:
-            - default,8
-            - push,6
-            - ingress,4
-            - mailers,2
-            - pull
-            - scheduler
-      smtp:
-        auth_method: plain
-        ca_file: /etc/ssl/certs/ca-certificates.crt
-        delivery_method: smtp
-        domain: notifications.govsocial.org
-        enable_starttls: 'never'
-        enable_starttls_auto: false
-        from_address: mastodon@notifications.govsocial.org
-        openssl_verify_mode: none
-        port: 465
-        reply_to:
-        server: email-smtp.us-east-2.amazonaws.com
-        ssl: false
-        tls: true
-        login: [redacted]
-        password: [redacted]
-        existingSecret:
-      streaming:
-        port: 4000
-        workers: 1
-        base_url: null
-        replicas: 1
-        affinity: {}
-        podSecurityContext: {}
-        securityContext: {}
-        resources: {}
-      web:
-        port: 3000
-        replicas: 1
-        affinity: {}
-        podSecurityContext: {}
-        securityContext: {}
-        resources: {}
+        mastodon:
+          createAdmin:
+            enabled: true
+            username: [redacted]
+            email: [redacted]
+          cron:
+            removeMedia:
+              enabled: true
+              schedule: "0 0 * * 0"
+          locale: en
+          local_domain: govsocial.org
+          web_domain: mastodon.govsocial.org
+          singleUserMode: false
+          authorizedFetch: false
+          persistence:
+            assets:
+              accessMode: ReadWriteMany
+              resources:
+                requests:
+                  storage: 10Gi
+            system:
+              accessMode: ReadWriteMany
+              resources:
+                requests:
+                  storage: 100Gi
+          s3:
+            enabled: true
+            force_single_request: true
+            access_key: "[redacted]"
+            access_secret: "[redacted]"
+            existingSecret: ""
+            bucket: "mastodongov"
+            endpoint: "https://storage.googleapis.com"
+            hostname: "storage.googleapis.com"
+            region: "us"
+            alias_host: ""
+          secrets:
+            secret_key_base: "[redacted]"
+            otp_secret: "[redacted]"
+            vapid:
+              private_key: "[redacted]"
+              public_key: "[redacted]"
+            existingSecret: ""
+          sidekiq:
+            podSecurityContext: {}
+            securityContext: {}
+            resources: {}
+            affinity: {}
+            workers:
+            - name: all-queues
+              concurrency: 25
+              replicas: 1
+              resources: {}
+              affinity: {}
+              queues:
+                - default,8
+                - push,6
+                - ingress,4
+                - mailers,2
+                - pull
+                - scheduler
+          smtp:
+            auth_method: plain
+            ca_file: /etc/ssl/certs/ca-certificates.crt
+            delivery_method: smtp
+            domain: notifications.govsocial.org
+            enable_starttls: 'never'
+            enable_starttls_auto: false
+            from_address: mastodon@notifications.govsocial.org
+            openssl_verify_mode: none
+            port: 465
+            reply_to:
+            server: email-smtp.us-east-2.amazonaws.com
+            ssl: false
+            tls: true
+            login: [redacted]
+            password: [redacted]
+            existingSecret:
+          streaming:
+            port: 4000
+            workers: 1
+            base_url: null
+            replicas: 1
+            affinity: {}
+            podSecurityContext: {}
+            securityContext: {}
+            resources: {}
+          web:
+            port: 3000
+            replicas: 1
+            affinity: {}
+            podSecurityContext: {}
+            securityContext: {}
+            resources: {}
 
-      metrics:
-        statsd:
-          address: ""
+          metrics:
+            statsd:
+              address: ""
 
-    ingress:
-      enabled: false
-      annotations:
-      ingressClassName:
-      hosts:
-        - host: mastodongov.org
-          paths:
-            - path: '/'
-      tls:
-        - secretName: mastodon-tls
+        ingress:
+          enabled: false
+          annotations:
+          ingressClassName:
           hosts:
-            - mastodon.local
+            - host: mastodongov.org
+              paths:
+                - path: '/'
+          tls:
+            - secretName: mastodon-tls
+              hosts:
+                - mastodon.local
 
-    elasticsearch:
-      enabled: false
-      image:
-        tag: 7
+        elasticsearch:
+          enabled: false
+          image:
+            tag: 7
 
-    postgresql:
-      enabled: false
-      postgresqlHostname: [redacted]
-      postgresqlPort: 5432
-      auth:
-        database: mastodongov
-        username: mastodon
-        password: "[redacted]"
-        postgresPassword: "[redacted]"
+        postgresql:
+          enabled: false
+          postgresqlHostname: [redacted]
+          postgresqlPort: 5432
+          auth:
+            database: mastodongov
+            username: mastodon
+            password: "[redacted]"
+            postgresPassword: "[redacted]"
 
-    redis:
-      enabled: true
-      hostname: ""
-      port: 6379
-      password: ""
+        redis:
+          enabled: true
+          hostname: ""
+          port: 6379
+          password: ""
 
-    service:
-      type: ClusterIP
-      port: 80
+        service:
+          type: ClusterIP
+          port: 80
 
-    externalAuth:
-      oidc:
-        enabled: false
-      saml:
-        enabled: false
-      oauth_global:
-        omniauth_only: false
-      cas:
-        enabled: false
-      pam:
-        enabled: false
-      ldap:
-        enabled: false
+        externalAuth:
+          oidc:
+            enabled: false
+          saml:
+            enabled: false
+          oauth_global:
+            omniauth_only: false
+          cas:
+            enabled: false
+          pam:
+            enabled: false
+          ldap:
+            enabled: false
 
-    podSecurityContext:
-      runAsUser: 991
-      runAsGroup: 991
-      fsGroup: 991
+        podSecurityContext:
+          runAsUser: 991
+          runAsGroup: 991
+          fsGroup: 991
 
-    securityContext: {}
+        securityContext: {}
 
-    serviceAccount:
-      create: true
-      annotations: {}
-      name: ""
+        serviceAccount:
+          create: true
+          annotations: {}
+          name: ""
 
-    podAnnotations: {}
+        podAnnotations: {}
 
-    jobAnnotations: {}
+        jobAnnotations: {}
 
-    resources: {}
+        resources: {}
 
-    nodeSelector: {}
+        nodeSelector: {}
 
-    tolerations: []
+        tolerations: []
 
-    affinity: {}
-```
+        affinity: {}
+    ```
 
 The quickest way to create this file is to create this much by hand:
 
@@ -297,7 +300,8 @@ You will want to set the `local_domain:` (and `web_domain:`, if it's different) 
 
 You will also need to pick the `username:` and `email:` for the Mastodon account that will be the initial admin user for the instance. You can add other users to various roles in the instance once it's running.
 
-**NOTE:** Our install didn't create this user - if this happens to you, there is a workaround that you can do once your instance is running.
+!!! Note
+    Our install didn't create this user - if this happens to you, there is a workaround that you can do once your instance is running.
 
 #### Secrets
 
@@ -432,7 +436,8 @@ Remember that we created a separate database for each platform we are running, s
 
 When you get to the actual [deployment](/building/mastodon/#deploy-mastodon) and your pods spin up, you should notice a [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) called `mastodon-db-migrate` spin up as well. This job is creating the correct database schema for your instance. Your other Mastodon pods may not be available until that job completes.
 
-**NOTE:** You may find that the `mastodon-db-migrate` job doesn't run with `postgres.enabled` set to `false` (although our experience was based on incorrectly setting it to `true` in our initial deployment and desperately trying to switch to Cloud SQL after [deploying Mastodon](/building/mastodon/#deploy-mastodon)[^1] ).
+!!! Note
+    You may find that the `mastodon-db-migrate` job doesn't run with `postgres.enabled` set to `false` (although our experience was based on incorrectly setting it to `true` in our initial deployment and desperately trying to switch to Cloud SQL after [deploying Mastodon](/building/mastodon/#deploy-mastodon)[^1] ).
 
 YMMV with a correctly configured fresh install, but if that happens to you, here is how we fixed it. The `mastodon-web` and `mastodon-sidekiq` pods will fail to start, but the `mastodon-streaming` pod will because, unlike the other two, it is not dependent on a database connection. The dirty little secret is that all three pods are running the same Mastodon image, so we can use the running `mastodon-streaming` pod to access a running Mastodon service and the `rails` environment we need.
 
@@ -495,7 +500,8 @@ With all this in place, here is the sequence of events:
 - pulls the `name: mastodon` HelmRelease, which points at the **platform** repository (`name: mastodon`) containing the Helm chart that builds the pods and services deploys the chart in our cluster, with their local `.env.production` files built from the updated ConfigMap.
 - The `healthChecks` in the Kustomization are run to make sure everything deployed successfully.
 
-**NOTE:** The **platform** repository is itself monitored for changes every `interval: 15m`, and changes in that will also trigger a Flux reconcilliation. If you want to avoid unexpected upgrades, you can specify [a valid `image.tag`](https://hub.docker.com/r/tootsuite/mastodon/tags) in your ConfigMap. This is particularly important now that v4.1 is imminent, and the published Helm Chart could change without warning.
+!!! Note
+    The **platform** repository is itself monitored for changes every `interval: 15m`, and changes in that will also trigger a Flux reconcilliation. If you want to avoid unexpected upgrades, you can specify [a valid `image.tag`](https://hub.docker.com/r/tootsuite/mastodon/tags) in your ConfigMap. This is particularly important now that v4.1 is imminent, and the published Helm Chart could change without warning.
 
 ## Deploy Mastodon
 
@@ -576,7 +582,8 @@ The load balancer needs to redirect requests for `govsocial.org/.well-known/webf
 
 To do this, we deployed an `HTTPS (classic) Load Balancer` in the `Network Services -> Load Balancing` menu in our Google Cloud Console. The setup is very similar to the [Ingress we set up earlier](#ingress_1). In fact, you will see the load balancer created by the Ingress in the list when you go there.
 
-**HINT:** Don't mess with it :-) If you're the sort of person who can't help pressing big red buttons that say "DO NOT PRESS", it's okay - anything you change will eventually be reverted by the GKE configuration, but your ingress might be broken until that happens.
+!!! Warning
+    Don't mess with it :-) If you're the sort of person who can't help pressing big red buttons that say "DO NOT PRESS", it's okay - anything you change will eventually be reverted by the GKE configuration, but your ingress might be broken until that happens.
 
 Create a new `HTTPS (classic) Load Balancer` (this one supports the hostname and path redirect features we need). Despite the higher cost, we selected the Premium network tier, as it allows for the addition of services like [Cloud Armor](https://cloud.google.com/armor/docs/cloud-armor-overview) and [Cloud CDN](https://cloud.google.com/cdn/docs/overview) if the platform needs it in the future.
 
@@ -588,6 +595,7 @@ In the `Host and path rules`, create a `Prefix redirect` for your `local_domain`
 
 Save your configuration, and wait for it to become available in the Cloud Console. Once it does, you should be able to connect to your Mastodon instance in your browser, and start [operating it](/operating/mastodon/).
 
-**NOTE:** One of the advantages of having this load balancer in conjunction with our domain scheme is that it means that we can use the default path (`/*`) of GOVSocial.org for documentation and non-instance specific content. We created a similar rule in our load balancer for `/*` that redirects to `docs.govsocial.org`, which is what you are reading now. There is a whole other write-up for [how we created that](/operating/documentation/)!
+!!! Note
+    One of the advantages of having this load balancer in conjunction with our domain scheme is that it means that we can use the default path (`/*`) of GOVSocial.org for documentation and non-instance specific content. We created a similar rule in our load balancer for `/*` that redirects to `docs.govsocial.org`, which is what you are reading now. There is a whole other write-up for [how we created that](/operating/documentation/)!
 
 [^1]: Flux to the rescue again! This was one of the issues (the other was abandoning AutoPilot) that had us delete all the Mastodon workloads and start over. The postgreSQL configuration seems to be particularly "sticky" and, try as we might, we could not get the corrected configuration to take after the initial deployment.

@@ -39,7 +39,8 @@ Integrating with MkDocs website deployment is a snap. Commit your local changes 
 
 Configure your GitHub Pages (in Settings) to publish from the `gh-pages` branch of your repo, and you should see your content published at `https://[user|organization].github.io` within a minute or so.
 
-**Note:** The MkDocs documentation suggests examples of ways of automating the deployment of your site each time you commit changes to your repo. We opted to deploy manually, as we wanted to publish to the public site when we wanted to, and not every time someone committed a change. YMMV.
+!!! Note
+    The MkDocs documentation suggests examples of ways of automating the deployment of your site each time you commit changes to your repo. We opted to deploy manually, as we wanted to publish to the public site when we wanted to, and not every time someone committed a change. YMMV.
 
 ## Custom Domain
 

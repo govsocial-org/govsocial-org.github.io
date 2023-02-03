@@ -15,7 +15,10 @@ To start, you will need to [install the Flux CLI](https://fluxcd.io/flux/install
 curl -s https://fluxcd.io/install.sh | sudo bash
 ```
 
-**NOTE:** To run `flux-cli` from a [Compute Engine VM](https://cloud.google.com/compute/docs/instances/create-start-instance), your `Compute Engine default service account` needs the `Kubernetes Engine Admin` role. You can edit the roles assigned to service account principals in [IAM](https://cloud.google.com/iam/docs/granting-changing-revoking-access#single-role). You should also get used to running this each time you connect to your VM:
+!!! Note
+    To run `flux-cli` from a [Compute Engine VM](https://cloud.google.com/compute/docs/instances/create-start-instance), your `Compute Engine default service account` needs the `Kubernetes Engine Admin` role. You can edit the roles assigned to service account principals in [IAM](https://cloud.google.com/iam/docs/granting-changing-revoking-access#single-role).
+
+You should also get used to running this each time you connect to your VM:
 
 ```bash
 gcloud container clusters get-credentials {my-cluster} --region {region}
@@ -31,11 +34,19 @@ These instructions assume you are using a GitHub personal or organizational repo
 
 ### GitHub Setup
 
-Before we bootstrap Flux on the cluster, a word about your GitHub repo setup. You will need a **private** GitHub personal or organizational repo. **Make sure the repo is private**, as your instance configurations, **including secrets**, will be stored there. When bootstrapped as detailed below, your repo will be used for all your Flux deployments, so avoid naming it for a particular cluster or platform.
+Before we bootstrap Flux on the cluster, a word about your GitHub repo setup. You will need a **private** GitHub personal or organizational repo.
+
+!!!Warning
+    **Make sure the repo is private**, as your instance configurations, **including secrets**, will be stored there.
+    
+When bootstrapped as detailed below, your repo will be used for all your Flux deployments, so avoid naming it for a particular cluster or platform.
 
 #### Personal Access Token (PAT)
 
-Flux uses a `classic` Personal Access Token (PAT) created for the personal GitHub account you use to access this repo. PATs are created and maintained in `<> Developer Settings` at the very bottom of the Settings menu for your account (accessed by clicking on your avatar at the top right of your GitHub window and choosing `Settings`). The PAT will need the full `repo` role. **Make a note of the token (it will start with `gpg_`) - you will only be shown it once.**
+Flux uses a `classic` Personal Access Token (PAT) created for the personal GitHub account you use to access this repo. PATs are created and maintained in `<> Developer Settings` at the very bottom of the Settings menu for your account (accessed by clicking on your avatar at the top right of your GitHub window and choosing `Settings`). The PAT will need the full `repo` role.
+
+!!! Warning
+    **Make a note of the token (it will start with `gpg_`) - you will only be shown it once.**
 
 By default, the PAT will expire every 30 days. You will get an email from GitHub 7 days before it expires. [To rotate it](https://github.com/fluxcd/flux2/discussions/2161):
 
@@ -57,7 +68,9 @@ flux bootstrap github \
   --path=clusters/{my-cluster} \
   --personal
 ```
-**NOTE:** If you are using an organizational repo, omit `--personal` from the options.
+
+!!! Note
+    If you are using an organizational repo, omit `--personal` from the options.
 
 You will be prompted for your PAT, which you can copy from where you stored it and paste into the command prompt before hitting `[Enter]` (you won't see anything when you paste it in).
 
