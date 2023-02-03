@@ -97,14 +97,6 @@ theme:
   palette:
 
     # Palette toggle for automatic mode
-    - media: "(prefers-color-scheme)"
-      scheme: default
-      primary: 'deep purple'
-      accent: 'deep purple'
-      toggle:
-        icon: material/brightness-auto
-        name: Follow system preferences
-
     # Toggle light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
