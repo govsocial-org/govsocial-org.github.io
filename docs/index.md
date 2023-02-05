@@ -22,3 +22,16 @@ All content must be appropriate for your work environment, and in keeping with y
 Organizational accounts and bots are encouraged, provided they meet the same requirements as individual accounts, and follow the instance rules.
 
 We hope you enjoy your time here. Please [reach out](mailto:cunningpike@gmail.com) to the instance team if you have any questions or concerns. Have fun!
+
+## Our Platforms
+
+<div class="grid cards" markdown>
+
+-   [**Mastodon**](https://mastodon.govsocial.org/)
+
+    ---
+    
+    [![Mastodon](/images/mastodongov.png){ align=left : style="width:150px"}](https://mastodon.govsocial.org/)
+
+</div>
+

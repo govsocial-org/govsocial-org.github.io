@@ -49,7 +49,8 @@ nav:
         - PostgreSQL: building/postgresql.md
         - Flux/Helm: building/fluxhelm.md
       - Platform Installs:
-        - Mastodon: building/mastodon.md         
+        - Mastodon: building/mastodon.md
+        - FediBlockHole: building/fediblockhole.md         
     - Operating GOVSocial:
       - operating/index.md
       - General:

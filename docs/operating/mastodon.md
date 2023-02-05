@@ -50,6 +50,25 @@ This will give your account owner and admin access to your Mastodon instance in 
 - Keep an eye on your Sidekiq queues, especially anything in `Retries`. There will usually be some sort of error message for those that will help you troubleshoot the issue, particularly if your [SMTP configuration](/building/mastodon/#smtp) isn't working.
 - The first time you look at `PGHero`, it will tell you that the `pg-stats` extension needs to be enabled. Do this. Google Cloud SQL installs this extension by default, and if you followed the steps in our [Postgres implementation](/building/mastodon/#postgresql), you should be able to install it right from the browser. This will alert you to any slow-running queries in your database.
 
+## Backups
+
+Upholding the [Mastodon Server Covenant](https://joinmastodon.org/covenant) means ensuring that our instance availability and configuration and our users' data must protected from loss. This means ensuring regular and frequent backups of:
+
+- **Our PostgreSQL database.** We perform automated nightly full database backups using [Cloud SQL backups](https://cloud.google.com/sql/docs/postgres/backup-recovery/backups), with a 7-day retention. We have also enabled [point-in-time recovery](https://cloud.google.com/sql/docs/postgres/backup-recovery/pitr) with 7-day log retention.
+- **Our Cloud Storage buckets.** Google Cloud Storage is [geo-redundant](https://cloud.google.com/storage/docs/locations), meaning that data is redundant across at least two zones within at least one geographic place as soon as our users upload it. Our Cloud Storage is used solely for user-uploaded media, such as avatars, banners, and media attached to posts. We believe that geo-redundancy is sufficient to protect this data from loss.
+- **GKE Clusters and persistent volume (PV) claims.** We perform automated nightly cluster backups of our instance namespaces using [Backup for GKE](https://cloud.google.com/kubernetes-engine/docs/add-on/backup-for-gke/concepts/backup-for-gke), with a 7-day retention period.
+!!! Warning
+    Backup for GKE restores **all** the pods in the the scope of the backup plan, **regardless of status**. If, like we did, you created a lot of terminated and failed pods during your initial deployment, you will want to clear them out to minimize your backup costs. You can get a list of any such pods by running this in from your CLI machine:
+
+    ```bash
+    ~$ kubectl get pods --field-selector status.phase=Failed -A
+    ```
+
+    You can delete the failed pods by running this from your CLI machine:
+    ```bash
+    ~$ kubectl delete pods --field-selector status.phase=Failed -A
+    ```
+
 ## Account Registration Approval
 
 If you leave account registration open on your Mastodon instance this section won't apply, but we wanted to limit accounts on our platform instances to identified and verified public service users and agencies. In order to do this, we require that users sign up with their organizational email address, which we verify against information on the organization's website, among other sources.
@@ -368,8 +387,14 @@ When you have saved and tested your draft Story, you can publish it in Tines, an
 
 ## Server Moderation
 
-As part of creating an
+As part of creating an instance safe for public service users and agencies using their public personas, it is important that we can maintain a reliable server moderation policy, limiting federation with instances that are conflict with [our server rules](https://mastodon.govsocial.org/about/). As a new instance, we wanted to take advantage of the experience of more mature instances via the [Oliphant Social Bloclist](https://writer.oliphant.social/oliphant/the-oliphant-social-blocklist), and of services like [RapidBlock](https://rapidblock.org/).
+
+As a small team, we wanted to automate the maintainance of our base server block list from these sources, to allow us to spend as much of our resources on the moderation of our specific instance. Enter the [FediBlockHole](https://github.com/eigenmagic/fediblockhole) project[^4]. You can read how we containerized and deployed FediBlockHole in our cluster [here](/building/fediblockhole/).
+
+### FediBlockHole
+
 
 [^1]: We are keen to add more - please [let us know](mailto:cunningpike@gmail.com) if there are any that should be added. Our worldview is regrettably US-centric, and there are likely many others that we have missed.
 [^2]: This list is subject to change without notice, but we will keep our documentation of it, both here and on our instances, up to date.
 [^3]: We haven't tried this ourselves so, if you do, [let us know](mailto:cunningpike@gmail.com) how it went!
+[^4]: Hat tip to [oliphant@oliphant.social](https://oliphant.social/@oliphant) for pointing us at this!
