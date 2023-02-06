@@ -5,19 +5,23 @@ title: Building a FediBlockHole Cron Job
 
 # Building a FediBlockHole Cron Job
 
-FediBlockHole is a Python tool that expects to be installed on a machine and run from the command line. We could have installed it on our CLI VM and run it from there with a crontab entry to automate it, but there are a couple of disadvantages with this approach. Firstly, it would require our VM to be more stable than a [spot VM](https://cloud.google.com/compute/docs/instances/spot), increasing our hosting costs. Secondly, the supported VM image in GCP comes with Python 3.9.x, and FediBlockHole requires at least version 3.10.
+FediBlockHole is a Python tool that is designed to be installed on a machine and run from the command line. We could have installed it on our CLI VM and run it from there with a crontab entry to automate it, but there are a couple of disadvantages with this approach. Firstly, it would require our VM to be more stable than a [spot VM](https://cloud.google.com/compute/docs/instances/spot), increasing our hosting costs. Secondly, the supported VM image in GCP comes with Python 3.9.x, and FediBlockHole requires at least version 3.10.
 
 Rather than embarking on that expedition, we decided to containerize FediBlockHole, and deploy a Kubernetes cron job that instantiates the container and runs the script.
 
 !!! Note
-    When we did this, we forked rather than cloning the [FediBlockHole repo](https://github.com/eigenmagic/fediblockhole) into [our own](https://github.com/cunningpike/fediblockhole). We wanted to submit a [pull request](https://github.com/eigenmagic/fediblockhole/pull/38) for ingrating our work back into the original project, and to keep our repo up to date with it. The following documentation is from that perspective. All repo paths are relative to the root of our forked repo.
+    When we did this, we **forked** rather than **cloning** the [FediBlockHole repo](https://github.com/eigenmagic/fediblockhole) into [our own repo](https://github.com/cunningpike/fediblockhole). We wanted to submit a [pull request](https://github.com/eigenmagic/fediblockhole/pull/38) for ingrating our work back into the original project, and to keep our repo up to date with it. The following documentation is from that perspective. All repo paths are relative to the root of our forked repo.
 
 ## Containerizing FediBlockHole
 
-To prepare for containerizing FediBlockHole, we installed Docker on our CLI machine from its package manager.
+To prepare for containerizing FediBlockHole, we installed Docker on our CLI machine from its package manager:
+
+```bash
+~$ sudo apt-get install docker.io
+```
 
 !!! Note
-    In a GCP Compute VM, the package is called `docker.io`
+    In a GCP Compute VM, the package is called `docker.io`. YMMV.
 
 Next, we prepared a Dockerfile for the Docker container:
 
@@ -84,7 +88,7 @@ Once signed in, we pushed the image to our `Packages` in GitHub:
 
 The completed package can be found [here](https://github.com/cunningpike/fediblockhole/pkgs/container/fediblockhole).
 
-## Creating the FediBlockHole Helm Chart
+## Creating the Helm Chart
 
 Next, we wanted to leverage the Flux/Helm system [we built earlier](/building/fluxhelm/) to deploy a Kubernetes cron job in our cluster.
 
@@ -232,9 +236,12 @@ affinity: {}
 
 The `repository:` value points to the location of the [GitHub Package](https://github.com/cunningpike/fediblockhole/pkgs/container/fediblockhole) we pushed our Docker image to. The `tag:` value can be used to override the `appVersion:` value in the [chart](#chart-file).
 
+!!! Note
+    We specified a non-root user and group in our Values file to make sure that the containerized script does not run as the root user.
+
 ### Templates
 
-These files are really just metadata for the Helm deployment - the real work is done in the [templates](https://helm.sh/docs/chart_template_guide/getting_started/).
+All the preceding files are really just metadata for the Helm deployment - the real work is done in the [templates](https://helm.sh/docs/chart_template_guide/getting_started/).
 
 #### Cron Job
 
@@ -284,11 +291,11 @@ spec:
 {% endraw %}
 ```
 
-You can see the values from the [Values file](#values-file) (prefixed with `.Values.`) throughout the template. An example of where a value from the Values file overrides the default from the Chart is highlighted in the file above.
+You can see the values from the [Values file](#values-file) (prefixed with `.Values.`) in the template. An example of where a value from the Values file overrides the default from the Chart is highlighted in the file above.
 
 #### Helpers File
 
- There are several values in the template (prefixed with `fediblockhole.`) that are not defined in the Values file. These are defined in a [Helpers file](https://helm.sh/docs/chart_template_guide/named_templates/), like this:
+ There are several values in the template (prefixed with `fediblockhole.`) that are not defined in either the Values file or the Chart. These are defined in a [Helpers file](https://helm.sh/docs/chart_template_guide/named_templates/), like this:
 
 ```golang title="/chart/templates/_helpers.tpl" hl_lines="66 69"
 {% raw %}
@@ -365,11 +372,320 @@ Create the default conf file path and filename
 {% endraw %}
 ```
 
-A slightly different syntax for defining defaults and overrides is highlighted above, showing how the local path and filename for the FediBlockHole configuration has a default value of `/etc/default/fediblockhole.conf.toml` used if another value is not set in the [Values file](#values-file).
+You can see how values from both the [Chart file](#chart-file) and the [Values file](#values-file) are combined to define other values that are then used in the [cron job template](#cron-job).
+
+A slightly different syntax for defining defaults and overrides is highlighted above, showing how the local path and filename for the FediBlockHole configuration has a default value of `/etc/default/fediblockhole.conf.toml` from the [Chart file](#chart-file) if a value is not set in the [Values file](#values-file).
 
 #### Configuration File
 
-As pointed out at the start, FediBlockHole was intended to be deployed on a machine with a persistant storage system, and read a [TOML-formatted](https://toml.io/en/v1.0.0) configuration file from a local filepath. This poses a problem when containerizing it, as we need to be able to easily make changes to the configuration file and redeploy the cron job with the updated values into the pod's local file system where the script expects to find it.
+As pointed out at the start, FediBlockHole was intended to be deployed on a machine with a persistant storage system, and read a [TOML-formatted](https://toml.io/en/v1.0.0) configuration file from a local filepath. This poses a challenge when containerizing it, as we need to be able to easily make changes to the configuration file and redeploy the cron job with the updated values into the pod's local file system where the script expects to find it. We also want to make sure that the container is rebuilt with the new configuration file when the changes are made to it.
 
+There are a few tricks in the various files that we used to accomplish this. First, we created a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) template, which globs a copy of the default configuration file stored in the root of the chart into a ConfigMap entry:
 
+```golang title="/chart/templates/configmap-conf-toml.yaml"
+{% raw %}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fediblockhole.fullname" . }}-conf-toml
+  labels:
+    {{- include "fediblockhole.labels" . | nindent 4 }}
+data:
+  {{ (.Files.Glob "fediblockhole.conf.toml").AsConfig | nindent 4 }}
+{% endraw %}
+```
 
+Next, we included in the container spec a local filesystem mount that mounts the configuration file into the expected location in the container's local filesystem:
+
+```golang title="/chart/templates/cronjob-fediblock-sync.yaml"
+{% raw %}
+...
+spec:
+  ...
+  containers:
+    ...
+      volumeMounts:
+        - name: config
+          mountPath: {{ include "fediblockhole.conf_file_path" . | quote }}
+  volumes:
+    - name: config
+      configMap:
+        name: {{ include "fediblockhole.fullname" . }}-conf-toml
+        items:
+        - key: {{ include "fediblockhole.conf_file_filename" . | quote }}
+          path: {{ include "fediblockhole.conf_file_filename" . | quote }}
+{% endraw %}
+```
+
+Finally, we set the container to [restart when a change to the ConfigMap is detected](https://renehernandez.io/notes/rolling-pods-config-changes/) by [annotating](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) it with the checksum of the ConfigMap:
+
+```golang title="/chart/templates/_helpers.tpl"
+{% raw %}
+...
+{{/*
+Rolling pod annotations
+*/}}
+{{- define "fediblockhole.rollingPodAnnotations" -}}
+rollme: {{ .Release.Revision | quote }}
+checksum/config-configmap: {{ include ( print $.Template.BasePath "/configmap-conf-toml.yaml" ) . | sha256sum | quote }}
+{{- end }}
+...
+{% endraw %}
+```
+
+All this ensures that a new container image is generated with the latest configuration file in the correct location in its local filesystem, each time a change is made to the ConfigMap.
+
+!!! Note
+    Remember that references to the ConfigMap in the chart are relative to the repository from which the Helm Release will actually be run. This will be **our** Flux/Helm repository that we [prepared earlier](../fluxhelm/), allowing us to specify our **own** ConfigMap containing **our** version of the configuration file.
+
+### OAuth Token
+
+In order to push blocks to your Mastodon instance, you will need a [Mastodon OAuth token](/operating/mastodon/#mastodon-oauth-token) with `admin:read` and `admin:write` scopes. You will paste the value from the `Your access token` field in the Mastodon `Development` screen into this block of the [FediBlockHole configuration file](#configuration-file) as highlighted here:
+
+```toml hl_lines="3"
+# List of instances to write blocklist to
+blocklist_instance_destinations = [
+  { domain = '{my-web_domain}', token = '[redacted]', max_followed_severity = 'silence'},
+]
+```
+
+You won't need to set the `Redirect URI` to anything other than the default - it's just the token that FediBlockHole needs.
+
+!!! Danger "Danger, Will Robinson"
+    **Protect your FediBlockHole configuration file carefully** once this token is placed in it, and rotate the token regularly. If compromised, it is all anyone will need to have full admin access to your instance via the API.
+
+### Deploying FediBlockHole
+
+Deploying our FediBlockHole cron job into our cluster followed an identical pattern to how we [deployed Mastodon](../mastodon/). We prepared our deployment by creating a GitHub repository source and namespace for our cron job:
+
+```yaml title="/clusters/{my-cluster}/gitrepositories/gitrepository-fediblockhole.yaml"
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: fediblockhole
+  namespace: flux-system
+spec:
+  interval: 5m
+  ref:
+    branch: main
+  url: https://github.com/cunningpike/fediblockhole/
+```
+
+```yaml title="/clusters/{my-cluster}/namespaces/namespace-fediblockhole.yaml"
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fediblockhole
+```
+
+Next, we created the Flux kustomization:
+
+```yaml title="/clusters/{my-cluster}/kustomizations/kustomization-fediblockhole.yaml"
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: fediblockhole
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: ./fediblockhole
+  prune: true # remove any elements later removed from the above path
+  timeout: 2m # if not set, this defaults to interval duration, which is 1h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  validation: server
+```
+
+Then, we created our own version of the ConfigMap that configures the FediBlockHole cron job itself:
+
+??? Example "/fediblockhole/configmap-fediblockhole-helm-chart-value-overrides.yaml"
+    ```yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: fediblockhole-helm-chart-value-overrides
+      namespace: fediblockhole
+    data:
+      values.yaml: |-  
+        image:
+          repository: ghcr.io/cunningpike/fediblockhole
+          # https://github.com/cunningpike/fediblockhole/pkgs/container/fediblockhole/versions
+          #
+          # alternatively, use `latest` for the latest release or `edge` for the image
+          # built from the most recent commit
+          #
+          # tag: latest
+          tag: ""
+          # use `Always` when using `latest` tag
+          pullPolicy: IfNotPresent
+
+        fediblockhole:
+          # location of the configuration file. Default is /etc/default/fediblockhole.conf.toml
+          conf_file:
+            path: ""
+            filename: ""
+          cron:
+            # -- run `fediblock-sync` every hour
+            sync:
+              # @ignored
+              enabled: true
+              # @ignored
+              schedule: "0 */2 * * *"
+
+        # if you manually change the UID/GID environment variables, ensure these values
+        # match:
+        podSecurityContext:
+          runAsUser: 991
+          runAsGroup: 991
+          fsGroup: 991
+
+        # @ignored
+        securityContext: {}
+
+        # -- Kubernetes manages pods for jobs and pods for deployments differently, so you might
+        # need to apply different annotations to the two different sets of pods. The annotations
+        # set with podAnnotations will be added to all deployment-managed pods.
+        podAnnotations: {}
+
+        # -- The annotations set with jobAnnotations will be added to all job pods.
+        jobAnnotations: {}
+
+        # -- Default resources for all Deployments and jobs unless overwritten
+        resources: {}
+          # We usually recommend not to specify default resources and to leave this as a conscious
+          # choice for the user. This also increases chances charts run on environments with little
+          # resources, such as Minikube. If you do want to specify resources, uncomment the following
+          # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+          # limits:
+          #   cpu: 100m
+          #   memory: 128Mi
+          # requests:
+          #   cpu: 100m
+          #   memory: 128Mi
+
+        # @ignored
+        nodeSelector: {}
+
+        # @ignored
+        tolerations: []
+
+        # -- Affinity for all pods unless overwritten
+        affinity: {}
+    ```
+
+The only changes you need to make in this file are:
+
+- Set `fediblockhole.cron.sync.enabled:` to `true`.
+- Set the desired crontab value in `fediblockhole.cron.sync.schedule:`. We started with `"0 */2 * * *"` initially, as shown, but have since reduced that to `"0 * * * *"` as updates are much faster after the initial sync.
+
+After that, we set up our version of the FediBlockHole configuration file:
+
+??? Example "/fediblockhole/configmap-fediblockhole-conf-toml.yaml"
+    ```yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: fediblockhole-conf-toml
+      namespace: fediblockhole
+    data:
+      fediblockhole.conf.toml: |-  
+        # List of instances to read blocklists from.
+        # If the instance makes its blocklist public, no authorization token is needed.
+        #   Otherwise, `token` is a Bearer token authorised to read domain_blocks.
+        # If `admin` = True, use the more detailed admin API, which requires a token with a 
+        #   higher level of authorization.
+        # If `import_fields` are provided, only import these fields from the instance.
+        #   Overrides the global `import_fields` setting.
+        blocklist_instance_sources = [
+          # { domain = 'public.blocklist'}, # an instance with a public list of domain_blocks
+          # { domain = 'jorts.horse', token = '<a_different_token>' }, # user accessible block list
+          # { domain = 'eigenmagic.net', token = '<a_token_with_read_auth>', admin = true }, # admin access required
+        ]
+
+        # List of URLs to read csv blocklists from
+        # Format tells the parser which format to use when parsing the blocklist
+        # max_severity tells the parser to override any severities that are higher than this value
+        # import_fields tells the parser to only import that set of fields from a specific source
+        blocklist_url_sources = [
+          # { url = 'file:///path/to/fediblockhole/samples/demo-blocklist-01.csv', format = 'csv' },
+          { url = 'https://codeberg.org/oliphant/blocklists/raw/branch/main/blocklists/_unified_min_blocklist.csv', format = 'csv' },
+          { url = 'https://rapidblock.org/blocklist.json', format = 'rapidblock.json' },
+        ]
+
+        ## These global allowlists override blocks from blocklists
+        # These are the same format and structure as blocklists, but they take precedence
+        allowlist_url_sources = [
+          # { url = 'https://raw.githubusercontent.com/eigenmagic/fediblockhole/main/samples/demo-allowlist-01.csv', format = 'csv' },
+          { url = 'https://codeberg.org/oliphant/blocklists/raw/branch/main/blocklists/__allowlist.csv', format = 'csv' },
+        ]
+
+        # List of instances to write blocklist to
+        blocklist_instance_destinations = [
+          { domain = 'mastodon.govsocial.org', token = '[redacted]', max_followed_severity = 'silence'},
+        ]
+
+        ## Store a local copy of the remote blocklists after we fetch them
+        #save_intermediate = true
+
+        ## Directory to store the local blocklist copies
+        # savedir = '/tmp'
+
+        ## File to save the fully merged blocklist into
+        # blocklist_savefile = '/tmp/merged_blocklist.csv'
+
+        ## Don't push blocklist to instances, even if they're defined above
+        # no_push_instance = false
+
+        ## Don't fetch blocklists from URLs, even if they're defined above
+        # no_fetch_url = false
+
+        ## Don't fetch blocklists from instances, even if they're defined above
+        # no_fetch_instance = false
+
+        ## Set the mergeplan to use when dealing with overlaps between blocklists
+        # The default 'max' mergeplan will use the harshest severity block found for a domain.
+        # The 'min' mergeplan will use the lightest severity block found for a domain.
+        # mergeplan = 'max'
+
+        ## Set which fields we import
+        ## 'domain' and 'severity' are always imported, these are additional
+        ## 
+        import_fields = ['public_comment', 'reject_media', 'reject_reports', 'obfuscate']
+
+        ## Set which fields we export
+        ## 'domain' and 'severity' are always exported, these are additional
+        ## 
+        export_fields = ['public_comment']
+    ```
+
+More information about how we chose our block list sources can be found [here](/operating/mastodon/#server-moderation).
+
+Finally, we created the Helm Release that deployed the configured cron job into our cluster:
+
+```yaml title="/fediblockhole/helmrelease-fediblockhole.yaml"
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: fediblockhole
+  namespace: fediblockhole
+spec:
+  chart:
+    spec:
+      chart: ./chart
+      sourceRef:
+        kind: GitRepository
+        name: fediblockhole
+        namespace: flux-system
+  interval: 15m
+  timeout: 5m
+  releaseName: fediblockhole
+  valuesFrom:
+  - kind: ConfigMap
+    name: fediblockhole-helm-chart-value-overrides
+    valuesKey: values.yaml
+```
+
+!!! Note "A Couple of Notes"
+    - Rate-limiting (either in our [Ingress](../mastodon/#ingress_1) or in the Mastodon API itself) makes running FediBlockHole on our instance a relatively slow operation, at least for an initial load. YMMV, but we recommend setting your `fediblockhole.cron.sync.schedule:` to a fairly lengthy interval (at least 2 hours) until you get a feel for how long a typical run takes in your environment.
+    - FediBlockHole currently does **NOT** delete expired blocks i.e. if an existing block in your instance is no longer in a pulled list, it needs to be removed manually. We are planning to contribute code to the FediBlockProject to implement this feature.

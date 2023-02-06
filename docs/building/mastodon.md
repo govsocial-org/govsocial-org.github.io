@@ -503,7 +503,7 @@ With all this in place, here is the sequence of events:
 !!! Note
     The **platform** repository is itself monitored for changes every `interval: 15m`, and changes in that will also trigger a Flux reconcilliation. If you want to avoid unexpected upgrades, you can specify [a valid `image.tag`](https://hub.docker.com/r/tootsuite/mastodon/tags) in your ConfigMap. This is particularly important now that v4.1 is imminent, and the published Helm Chart could change without warning.
 
-## Deploy Mastodon
+## Deploying Mastodon
 
 You can either wait for Flux to detect your changes, or you can speed up the process by running the following from your CLI machine:
 

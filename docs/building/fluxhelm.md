@@ -36,7 +36,7 @@ These instructions assume you are using a GitHub personal or organizational repo
 
 Before we bootstrap Flux on the cluster, a word about your GitHub repo setup. You will need a **private** GitHub personal or organizational repo.
 
-!!!Warning
+!!! Danger "Danger, Will Robinson" 
     **Make sure the repo is private**, as your instance configurations, **including secrets**, will be stored there.
     
 When bootstrapped as detailed below, your repo will be used for all your Flux deployments, so avoid naming it for a particular cluster or platform.
