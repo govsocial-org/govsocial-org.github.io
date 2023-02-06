@@ -2,62 +2,67 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.govsocial.org/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/building/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/building/cluster/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/building/domains/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/building/email/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.govsocial.org/building/fediblockhole/</loc>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/building/fluxhelm/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/building/mastodon/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/building/postgresql/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/building/storage/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/operating/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/operating/documentation/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docs.govsocial.org/operating/mastodon/</loc>
-         <lastmod>2023-02-03</lastmod>
+         <lastmod>2023-02-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
