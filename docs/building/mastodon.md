@@ -12,7 +12,7 @@ In building our Mastodon instance, we basically followed [The Funky Penguin's Ge
 The first thing to do is to decide which Helm chart to use. We used the "official" one from [the Mastodon repo](https://github.com/mastodon/chart). As the Cookbook points out, this isn't a Helm repository, but a regular GitHub repository with the Helm chart in it. There is also a [Bitnami Helm chart](https://github.com/bitnami/charts/tree/main/bitnami/mastodon), which did not exist at the time we started (it was created on December 15, 2022), and which we have not tried.
 
 !!! Note
-    In all the file examples below, the path is from the root of your repo. Refer to the [Flux repo plan](/building/fluxhelm/#flux-repository-structure) if you're unsure where all the files go.
+    In all the file examples below, the path is from the root of your repo. Refer to the [Flux repo plan](../fluxhelm/#flux-repository-structure) if you're unsure where all the files go.
 
 Having decided which chart to use, you need to create the appropriate repository entry in your Flux repo, so Flux knows where to pull the chart from. Here is the `GitRepository` entry we use for the Mastodon repo chart (there is an example of a [Bitnami Helm repo file](https://geek-cookbook.funkypenguin.co.nz/kubernetes/external-dns/#helmrepository) in the Cookbook):
 
@@ -41,7 +41,7 @@ metadata:
 
 ## Flux Kustomization
 
-Now, we need to provide the instructions to Flux to connect to **our** repository (that reference was created when we [bootstrapped Flux](/building/fluxhelm/#bootstrap-flux)), apply our custom deployment configuration, install it into the namespace, and run some health checks to make sure it worked. This uses a Kubernetes object called a [Kustomization](https://kubectl.docs.kubernetes.io/references/kubectl/kustomize/):
+Now, we need to provide the instructions to Flux to connect to **our** repository (that reference was created when we [bootstrapped Flux](../fluxhelm/#bootstrap-flux)), apply our custom deployment configuration, install it into the namespace, and run some health checks to make sure it worked. This uses a Kubernetes object called a [Kustomization](https://kubectl.docs.kubernetes.io/references/kubectl/kustomize/):
 
 ```yaml title="/clusters/{my-cluster}/kustomizations/kustomization-mastodon.yaml"
 apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
@@ -80,7 +80,7 @@ The `spec.path:` entry refers to a `./mastodon` directory at the root of **our**
 
 ## Custom Configuration
 
-This is where the magic really happens. We have told Flux to look in the `./mastodon` directory in our GitHub respository that we [bootstrapped Flux](/building/fluxhelm/#bootstrap-flux) with earlier. Now, we populate that directory with the special sauce that makes the whole build work.
+This is where the magic really happens. We have told Flux to look in the `./mastodon` directory in our GitHub respository that we [bootstrapped Flux](../fluxhelm/#bootstrap-flux) with earlier. Now, we populate that directory with the special sauce that makes the whole build work.
 
 ### ConfigMap
 
@@ -296,7 +296,7 @@ and then paste in the rest of it underneath from the `values.yaml` from the Helm
 
 #### General
 
-You will want to set the `local_domain:` (and `web_domain:`, if it's different) values to those you configured when [preparing your DNS domains](/building/domains/).
+You will want to set the `local_domain:` (and `web_domain:`, if it's different) values to those you configured when [preparing your DNS domains](../domains/).
 
 You will also need to pick the `username:` and `email:` for the Mastodon account that will be the initial admin user for the instance. You can add other users to various roles in the instance once it's running.
 
@@ -346,7 +346,7 @@ Now, let's walk through the specifics of how we configured Mastodon to deploy wi
 
 #### SMTP
 
-Here is the section of our ConfigMap that relates to the AWS SES service we [prepared earlier](/building/email/#setting-up-aws-ses):
+Here is the section of our ConfigMap that relates to the AWS SES service we [prepared earlier](../email/#setting-up-aws-ses):
 
 ```yaml
 smtp:
@@ -378,7 +378,7 @@ The tricky part was getting the connection to work. We could not get `STARTTLS` 
 
 #### Cloud Storage
 
-Here is the section of our ConfigMap that relates to the S3-compatible storage we [prepared earlier](/building/storage/):
+Here is the section of our ConfigMap that relates to the S3-compatible storage we [prepared earlier](../storage/):
 
 ```yaml
 s3:
@@ -403,7 +403,7 @@ The only catch we stumbled on when getting this to work was the addition of `for
 
 #### PostgreSQL
 
-Here is the section of our ConfigMap that relates to the PostgreSQL database we [prepared earlier](/building/postgres/):
+Here is the section of our ConfigMap that relates to the PostgreSQL database we [prepared earlier](../postgres/):
 
 ```yaml
 postgresql:
@@ -434,10 +434,10 @@ The `postgresqlHostname:` setting will be the internal IP address of your Postgr
 
 Remember that we created a separate database for each platform we are running, so we changed the `database:` and `username:` to match what we created. Because we are also using a different user for the platform database, we needed to set both the `password:` (which is the password of the account in the `username:` setting) and the `postgresPassword:` (which is the password of the default `postgres` account) to the correct values. Mastodon uses each for different database tasks, so it needs both passwords in this configuration.
 
-When you get to the actual [deployment](/building/mastodon/#deploy-mastodon) and your pods spin up, you should notice a [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) called `mastodon-db-migrate` spin up as well. This job is creating the correct database schema for your instance. Your other Mastodon pods may not be available until that job completes.
+When you get to the actual [deployment](#deploying-mastodon) and your pods spin up, you should notice a [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) called `mastodon-db-migrate` spin up as well. This job is creating the correct database schema for your instance. Your other Mastodon pods may not be available until that job completes.
 
 !!! Note
-    You may find that the `mastodon-db-migrate` job doesn't run with `postgres.enabled` set to `false` (although our experience was based on incorrectly setting it to `true` in our initial deployment and desperately trying to switch to Cloud SQL after [deploying Mastodon](/building/mastodon/#deploy-mastodon)[^1] ).
+    You may find that the `mastodon-db-migrate` job doesn't run with `postgres.enabled` set to `false` (although our experience was based on incorrectly setting it to `true` in our initial deployment and desperately trying to switch to Cloud SQL after [deploying Mastodon](#deploying-mastodon)[^1] ).
 
 YMMV with a correctly configured fresh install, but if that happens to you, here is how we fixed it. The `mastodon-web` and `mastodon-sidekiq` pods will fail to start, but the `mastodon-streaming` pod will because, unlike the other two, it is not dependent on a database connection. The dirty little secret is that all three pods are running the same Mastodon image, so we can use the running `mastodon-streaming` pod to access a running Mastodon service and the `rails` environment we need.
 
@@ -536,7 +536,7 @@ That's it! You're done deploying your Mastodon instance on GKE! Now, we need to 
 
 ## Ingress
 
-You will [remember](/building/mastodon/#ingress) that we did not enable the ingress that is included in the Mastodon Helm chart and instead opted to configure the GKE Ingress by hand.
+You will [remember](#ingress) that we did not enable the ingress that is included in the Mastodon Helm chart and instead opted to configure the GKE Ingress by hand.
 
 You can do this in the console by going to `Services & Ingress` in the GKE menu in Google Cloud Console. You will need an `External HTTPS Ingress` with two ingress paths to make Mastodon work properly, especially with mobile applications:
 

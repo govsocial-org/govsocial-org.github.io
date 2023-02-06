@@ -387,12 +387,77 @@ When you have saved and tested your draft Story, you can publish it in Tines, an
 
 ## Server Moderation
 
-As part of creating an instance safe for public service users and agencies using their public personas, it is important that we can maintain a reliable server moderation policy, limiting federation with instances that are conflict with [our server rules](https://mastodon.govsocial.org/about/). As a new instance, we wanted to take advantage of the experience of more mature instances via the [Oliphant Social Bloclist](https://writer.oliphant.social/oliphant/the-oliphant-social-blocklist), and of services like [RapidBlock](https://rapidblock.org/).
+As part of creating an instance safe for public service users and agencies using their public personas, it is important that we can maintain a reliable server moderation policy, limiting federation with instances that are conflict with [our server rules](https://mastodon.govsocial.org/about/).
 
-As a small team, we wanted to automate the maintainance of our base server block list from these sources, to allow us to spend as much of our resources on the moderation of our specific instance. Enter the [FediBlockHole](https://github.com/eigenmagic/fediblockhole) project[^4]. You can read how we containerized and deployed FediBlockHole in our cluster [here](/building/fediblockhole/).
+Also, as a small team, we wanted to automate the maintainance of our base server moderation list from these sources, to allow us to dedicate our resources to the moderation of our specific instance. Enter the [FediBlockHole](https://github.com/eigenmagic/fediblockhole) project[^4].
 
 ### FediBlockHole
 
+We have documented how we containerized and deployed FediBlockHole in our cluster [here](/building/fediblockhole/). Once that was done, we needed to decide which lists to pull from.
+
+#### Selecting Block Lists
+
+Server moderation in the Fediverse is a little like spam filtering for email servers. It is generally up to each individual mailop to decide and implement their own spam filtering policy, with widely varying results. Over time, trusted lists of "known bad" servers (such as [these](https://mxtoolbox.com/problem/blacklist/)) have evolved to provide a more consistent and centralized way of filtering traffic from poorly-behaved MTAs.
+
+[The RapidBlock Project](https://rapidblock.org/) is an equivalent of this for Mastodon instances, and was a clear choice for us. You can see where we pull this list in our [FediBlockHole configuration file](/building/fediblockhole/#deploying-fediblockhole) here:
+
+```toml
+blocklist_url_sources = [
+  # { url = 'file:///path/to/fediblockhole/samples/demo-blocklist-01.csv', format = 'csv' },
+  { url = 'https://rapidblock.org/blocklist.json', format = 'rapidblock.json' },
+]
+```
+
+The `rapidblock.json` format is specific to RapidBlock (it is designed for use by Fediverse platforms as a whole, and not just Mastodon), and looks like this:
+
+``` {.json .no-copy}
+{
+  "@spec": "https://rapidblock.org/spec/v1/",
+  "publishedAt": "2022-12-29T18:40:02.065805293Z",
+  "blocks": {
+    "101010.pl": {
+      "isBlocked": true,
+      "reason": "cryptomining javascript, white supremacy",
+      "tags": [
+        "antisemitism",
+        "malware",
+        "racism"
+      ],
+      "dateRequested": "2022-11-16T00:00:00Z",
+      "dateDecided": "2022-11-16T00:00:00Z"
+    ...
+```
+
+!!! Note
+    Mastodon server moderation has severity levels that are explained [here](https://docs.joinmastodon.org/admin/moderation/#server-wide-moderation), but you will notice from the sample RapidBlock file that no severity level is specified. This means that FediBlockHole will use the `max_severity` configuration setting, which is `suspend` by default and, if users on your instance are following accounts from the moderated domain, the `max_followed_severity` setting which defaults to `silence`.
+
+We also came across a set of consolidated blocklists created (using FediBlockHole) from the server block lists from various "tiers" of Mastodon instances. [The Oliphant Social Blocklist](https://writer.oliphant.social/oliphant/the-oliphant-social-blocklist) provides a number of different lists using different tiers and [merge plans](#selecting-a-merge-plan) for each.
+
+And here is where the fun started. Being new, and sensitive to our goal of creating an instance safe for public service users and agencies using their public personas, we initially selected the [Unified Max Block List](https://codeberg.org/oliphant/blocklists/raw/branch/main/blocklists/_unified_max_blocklist.csv). This is all blocks from all tiers, using a `max` merge plan.
+
+This resulted in a huge blocklist, including the instance (mstdn.ca) where at least one of our team has their personal account! As noted [here](/building/fediblockhole/#deploying-fediblockhole), FediBlockHole has no mechanism for removing blocks that are no longer in the subscribed lists, so we had to figure out what to do next.
+
+Luckily, there is a [collection of Python-based utilities](https://github.com/ineffyble/mastodon-block-tools), from which we got a [script](https://github.com/chdorner/secretbearsociety/blob/main/clear-blocks.py) that, once we added a timeout to avoid tripping the rate-limit on our API, did the trick.
+
+We now use the much more limited but still effective [Unified Min Blocklist](https://codeberg.org/oliphant/blocklists/raw/branch/main/blocklists/_unified_max_blocklist.csv), which combines block lists from tiers 0 through 2 servers with a `min` merge plan. You can see where we pull this list in our [FediBlockHole configuration file](/building/fediblockhole/#deploying-fediblockhole) here:
+
+```toml
+blocklist_url_sources = [
+  # { url = 'file:///path/to/fediblockhole/samples/demo-blocklist-01.csv', format = 'csv' },
+            { url = 'https://codeberg.org/oliphant/blocklists/raw/branch/main/blocklists/_unified_min_blocklist.csv', format = 'csv' },
+]
+``` 
+
+!!! Note
+    This list does **NOT** include the RapidBlock list, so we combine it with the above list, using a `max` merge plan
+
+#### Selecting a Merge Plan
+
+One of the great features of FediBlockHole is the ability to specify a `mergeplan` setting of `min` or `max` when combining lists from multiple sources. The default is `max`.
+
+The difference between the two is how FediBlockHole resolves the conflict when the same block is encountered from different sources with different [severities](https://docs.joinmastodon.org/admin/moderation/#server-wide-moderation). A `max` merge plan selects the **highest** of the severity levels from all sources of the same block, while a `min` merge plan selects the **lowest**.
+
+We have opted to implement a `max` merge plan for our lists.
 
 [^1]: We are keen to add more - please [let us know](mailto:cunningpike@gmail.com) if there are any that should be added. Our worldview is regrettably US-centric, and there are likely many others that we have missed.
 [^2]: This list is subject to change without notice, but we will keep our documentation of it, both here and on our instances, up to date.

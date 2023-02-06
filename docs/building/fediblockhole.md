@@ -1,9 +1,9 @@
 ---
 #template: home.html
-title: Building a FediBlockHole Cron Job
+title: Building a k8s FediBlockHole Cron Job
 ---
 
-# Building a FediBlockHole Cron Job
+# Building a k8s FediBlockHole Cron Job
 
 FediBlockHole is a Python tool that is designed to be installed on a machine and run from the command line. We could have installed it on our CLI VM and run it from there with a crontab entry to automate it, but there are a couple of disadvantages with this approach. Firstly, it would require our VM to be more stable than a [spot VM](https://cloud.google.com/compute/docs/instances/spot), increasing our hosting costs. Secondly, the supported VM image in GCP comes with Python 3.9.x, and FediBlockHole requires at least version 3.10.
 
@@ -90,7 +90,7 @@ The completed package can be found [here](https://github.com/cunningpike/fediblo
 
 ## Creating the Helm Chart
 
-Next, we wanted to leverage the Flux/Helm system [we built earlier](/building/fluxhelm/) to deploy a Kubernetes cron job in our cluster.
+Next, we wanted to leverage the Flux/Helm system [we built earlier](../fluxhelm/) to deploy a Kubernetes cron job in our cluster.
 
 ### Chart File
 
@@ -689,3 +689,4 @@ spec:
 !!! Note "A Couple of Notes"
     - Rate-limiting (either in our [Ingress](../mastodon/#ingress_1) or in the Mastodon API itself) makes running FediBlockHole on our instance a relatively slow operation, at least for an initial load. YMMV, but we recommend setting your `fediblockhole.cron.sync.schedule:` to a fairly lengthy interval (at least 2 hours) until you get a feel for how long a typical run takes in your environment.
     - FediBlockHole currently does **NOT** delete expired blocks i.e. if an existing block in your instance is no longer in a pulled list, it needs to be removed manually. We are planning to contribute code to the FediBlockProject to implement this feature.
+    - v1.0.0 of our Helm chart for FediBlockHole does not include ConfigMaps for the local file import functionality. This will be included in the next release.
