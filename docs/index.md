@@ -9,6 +9,18 @@ GovSocial's mission is to provide instances of Fediverse social media platforms 
 
 As public servants ourselves, we believe in the [US Digital Service](https://www.usds.gov/) [Playbook](https://playbook.cio.gov/) principle of ["Default to Open"](https://playbook.cio.gov/#play13), so this site provides links to how we build and run our instances, and transparent reporting on the operating performance and costs of our instances.
 
+# Our Platforms
+
+<div class="grid cards" markdown>
+
+-   [**Mastodon**](https://mastodon.govsocial.org/)
+
+    ---
+    
+    [![Mastodon](/images/mastodongov.png){ align=left : style="width:150px"}](https://mastodon.govsocial.org/)
+
+</div>
+
 # What to expect when you join
 
 Our instance federation and moderation polices are stricter than many general use instances.
@@ -22,16 +34,3 @@ All content must be appropriate for your work environment, and in keeping with y
 Organizational accounts and bots are encouraged, provided they meet the same requirements as individual accounts, and follow the instance rules.
 
 We hope you enjoy your time here. Please [reach out](mailto:cunningpike@gmail.com) to the instance team if you have any questions or concerns. Have fun!
-
-## Our Platforms
-
-<div class="grid cards" markdown>
-
--   [**Mastodon**](https://mastodon.govsocial.org/)
-
-    ---
-    
-    [![Mastodon](/images/mastodongov.png){ align=left : style="width:150px"}](https://mastodon.govsocial.org/)
-
-</div>
-
