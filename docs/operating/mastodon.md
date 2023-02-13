@@ -81,6 +81,7 @@ Many national governments own and administer a top-level or secondary-level DNS 
 - [.gov.au](https://www.domainname.gov.au/)
 - [.gc.ca](https://en.wikipedia.org/wiki/.gc.ca)
 - [.gov.uk](https://www.gov.uk/apply-for-and-manage-a-gov-uk-domain-name)
+- [.europa.eu](https://wikis.ec.europa.eu/display/WEBGUIDE/01.+Europa+domain+and+subdomains+overview)
 
 There are also free personal email domains that we are reasonably certain are never used by public service entities. These include[^2]:
 
