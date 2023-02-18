@@ -18,26 +18,14 @@ This is where the web interface for Prometheus is your friend. We spent a lot of
 !!! Note
     Our installation of metrics and monitoring being fairly recent (early February 2023), we don't have a full month of data yet, but we have provided examples of what will be posted at the end of the month.
 
-### Cluster - February 2023
+### Overview - February 2023
 
-![](/images/dashboards/cluster.png)
+![](/images/dashboards/overview.png)
 
-### Nodes - February 2023
+### Resources - February 2023
 
-![](/images/dashboards/nodes.png)
+![](/images/dashboards/resources.png)
 
-### Deployments - February 2023
+### Network - February 2023
 
-![](/images/dashboards/deployments.png)
-
-### StatefulSets - February 2023
-
-![](/images/dashboards/statefulsets.png)
-
-### Pods - February 2023
-
-![](/images/dashboards/pods.png)
-
-### Containers - February 2023
-
-![](/images/dashboards/containers.png)
+![](/images/dashboards/network.png)
