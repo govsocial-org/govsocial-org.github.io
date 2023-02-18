@@ -5,12 +5,12 @@ title: DNS Domains
 
 # DNS Domains
 
-You will need a public DNS domain for your Fediverse instances if you want them to be accessible from the Internet. Because we wanted to host more than one Fediverse platform under the GOVSocial umbrella, we choose `govsocial.org` as our root domain, with `{instance}.govsocial.org` as the instance-specific hostname.
+You will need a public DNS domain for your Fediverse instances if you want them to be accessible from the Internet. Because we wanted to host more than one Fediverse platform under the GOVSocial umbrella, we chose `govsocial.org` as our root domain, with `{platform}.govsocial.org` as the platform-specific hostname.
 
 For Mastodon, there are a couple of things to be aware of when choosing a domain in general, and this configuration in particular:
 
-- **Be aware of recent (December 21, 2022) changes to the [Mastodon Trademark Policy](https://joinmastodon.org/trademark)**. You will need written permission from Mastodon gGmbH to use 'Mastodon' or any derivatives (e.g. "mastodoon", "mast0don", "mstdn") in your domain or hostname[^1].
-- **We wanted to have our user accounts use `@govsocial.org` for all our instances** instead of the actual instance hostname. As you will see [later](../mastodon/#load-balancer), this has implications for how both Mastodon and our load balancer are configured.
+- **The [Mastodon Trademark Policy](https://joinmastodon.org/trademark)** recently changed (December 21, 2022). You need written permission from Mastodon gGmbH to use 'Mastodon' or any derivatives (e.g. "mastodoon", "mast0don", "mstdn") in your domain or hostname[^1].
+- **We wanted to have our user accounts use** `{username}@govsocial.org` **for all our instances** instead of the actual instance hostname. As you will see [later](../mastodon/#load-balancer), this has implications for how both Mastodon and our load balancer are configured.
 
 Register your domain (we use [Google Domains](https://domains.google/)), set [Google Cloud DNS](https://cloud.google.com/dns/docs/overview/) as the nameserver, and enable DNSSEC. The console will guide you through the steps outlined [here](https://cloud.google.com/dns/docs/set-up-dns-records-domain-name).
 
@@ -26,7 +26,7 @@ However, if you insist, here are some tips we learned during our efforts to get 
 
 One of the challenges about deploying in different components of a cloud service provider is granting authenticated access between these components, particularly between services running in pods on your cluster and other services such as Cloud DNS.
 
-The service accounts inside a GKE cluster are not part of the GCP IAM system that controls access to these other services. To grant services running GKE pods access to those services, the GKE service account in a pod needs to be mapped to an IAM account with the correct roles.
+The service accounts inside a GKE cluster are not part of the GCP IAM system that controls access to these other services. To grant services running GKE pods access to those services, the GKE service account in a pod needs to be mapped to an IAM account with the correct roles. In order for ExternalDNS to make changes to CloudDNS, its Kubernetes service account needs to be mapped to an IAM principle with the appropriate role.
 
 The first thing to do is install the `IAM Service Account Credentials API` into your GCP project. You can do this by selecting the `IAM & Admin` item on the GCP Console menu. If the API is not already installed, you will be prompted to add it. Once it is installed, navigate to `Service Accounts`, and create a new service account principal. You will need to assign this account the `DNS Administrator` role.
 
@@ -52,7 +52,7 @@ You will also likely encounter this error:
 DNSEndpoint ("dnsendpoints.externaldns.k8s.io is forbidden: User \"system:serviceaccount:external-dns:external-dns\" cannot list resource \"dnsendpoints\" in API group \"externaldns.k8s.io\" at the cluster scope")
 ```
 
-To this this one, run this from your CLI machine:
+To fix this one, run this from your CLI machine:
 
 ```bash
 kubctl get clusterrole external-dns-external-dns -o yaml > {file}

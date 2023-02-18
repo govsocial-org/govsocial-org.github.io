@@ -5,7 +5,7 @@ title: Mastodon Operations
 
 # Mastodon Operations
 
-Now that you have your Mastodon instance built, you're going to want to start using it!
+Now that you have your Mastodon instance [deployed](/building/mastodon/), you're going to want to start using it!
 
 ## Administrator Access
 
@@ -47,7 +47,7 @@ This will give your account owner and admin access to your Mastodon instance in 
 
 - Be sure to walk through the `Server Settings` and set up, at a minumum, your `About` message and your `Server Rules`. Ours are [here](https://mastodon.govsocial.org/about).
 - It is **strongly advised** that you add a trusted friend as another instance administrator. Until you do, you are the only person with that access. You will also use the `Roles` menu to manage your growing team of administrators and moderators as your instance grows.
-- Keep an eye on your Sidekiq queues, especially anything in `Retries`. There will usually be some sort of error message for those that will help you troubleshoot the issue, particularly if your [SMTP configuration](/building/mastodon/#smtp) isn't working.
+- Keep an eye on your Sidekiq queues, especially anything in `Dead` and `Retries`. There will usually be some sort of error message for those that will help you troubleshoot the issue, particularly if your [SMTP configuration](/building/mastodon/#smtp) isn't working.
 - The first time you look at `PGHero`, it will tell you that the `pg-stats` extension needs to be enabled. Do this. Google Cloud SQL installs this extension by default, and if you followed the steps in our [Postgres implementation](/building/mastodon/#postgresql), you should be able to install it right from the browser. This will alert you to any slow-running queries in your database.
 
 ## Backups
@@ -58,15 +58,15 @@ Upholding the [Mastodon Server Covenant](https://joinmastodon.org/covenant) mean
 - **Our Cloud Storage buckets.** Google Cloud Storage is [geo-redundant](https://cloud.google.com/storage/docs/locations), meaning that data is redundant across at least two zones within at least one geographic place as soon as our users upload it. Our Cloud Storage is used solely for user-uploaded media, such as avatars, banners, and media attached to posts. We believe that geo-redundancy is sufficient to protect this data from loss.
 - **GKE Clusters and persistent volume (PV) claims.** We perform automated nightly cluster backups of our instance namespaces using [Backup for GKE](https://cloud.google.com/kubernetes-engine/docs/add-on/backup-for-gke/concepts/backup-for-gke), with a 7-day retention period.
 !!! Warning
-    Backup for GKE restores **all** the pods in the the scope of the backup plan, **regardless of status**. If, like we did, you created a lot of terminated and failed pods during your initial deployment, you will want to clear them out to minimize your backup costs. You can get a list of any such pods by running this in from your CLI machine:
+    Backup for GKE restores **all** the pods in the the scope of the backup plan, **regardless of status**. If, like we did, you created a lot of completed, terminated, and failed pods during your initial deployment, you will want to clear them out to minimize your backup costs. You can get a list of any such pods by running this in from your CLI machine:
 
     ```bash
-    ~$ kubectl get pods --field-selector status.phase=Failed -A
+    ~$ kubectl get pods --field-selector=status.phase!=Running -A
     ```
 
-    You can delete the failed pods by running this from your CLI machine:
+    You can delete the pods by running this from your CLI machine:
     ```bash
-    ~$ kubectl delete pods --field-selector status.phase=Failed -A
+    ~$ kubectl delete pods --field-selector=status.phase!=Running -A
     ```
 
 ## Account Registration Approval
@@ -83,7 +83,7 @@ Many national governments own and administer a top-level or secondary-level DNS 
 - [.gov.uk](https://www.gov.uk/apply-for-and-manage-a-gov-uk-domain-name)
 - [.europa.eu](https://wikis.ec.europa.eu/display/WEBGUIDE/01.+Europa+domain+and+subdomains+overview)
 
-There are also free personal email domains that we are reasonably certain are never used by public service entities. These include[^2]:
+There are also free personal email domains that we are reasonably certain are (or should!) never used by public service entities. These include[^2]:
 
 - gmail.com
 - yahoo.com
@@ -108,7 +108,7 @@ When you're done, click `Submit`. Edit your newly created application by clickin
 
 #### Tines Credential
 
-In order for your Tines workflow to authenticate to your Mastodon instance, it will need a credential. You can create one in your Tines team (everyone gets a team in Tines, even if they are an individual user) by expanding your team name and clicking on `Credentials` and then `New Credential` in the screen that appears. Pick `OAuth 2.0` from the dropdown menu.
+In order for your Tines workflow to authenticate to your Mastodon instance, it will need this OAuth credential. You can create it in your Tines team (everyone gets a team in Tines, even if they are an individual user) by expanding your team name and clicking on `Credentials` and then `New Credential` in the screen that appears. Pick `OAuth 2.0` from the dropdown menu.
 
 Give your credential a suitable name, and then get ready to switch back and forth between this screen and your Mastodon `Development` screen as you set this up.
 
@@ -394,7 +394,15 @@ Also, as a small team, we wanted to automate the maintainance of our base server
 
 ### FediBlockHole
 
-We have documented how we containerized and deployed FediBlockHole in our cluster [here](/building/fediblockhole/). Once that was done, we needed to decide which lists to pull from.
+We have documented how we containerized and deployed FediBlockHole in our cluster [here](/building/fediblockhole/). Once that was done, we needed to decide which lists to pull from, and a strategy for combining them into a single list for our instance.
+
+#### Selecting a Merge Plan
+
+One of the great features of FediBlockHole is the ability to specify a `mergeplan` setting of `min` or `max` when combining lists from multiple sources. The default is `max`.
+
+The difference between the two is how FediBlockHole resolves the conflict when the same block is encountered from different sources with different [severities](https://docs.joinmastodon.org/admin/moderation/#server-wide-moderation). A `max` merge plan selects the **highest** of the severity levels from all sources of the same block, while a `min` merge plan selects the **lowest**.
+
+We have opted to implement a `max` merge plan for our lists.
 
 #### Selecting Block Lists
 
@@ -452,15 +460,7 @@ blocklist_url_sources = [
 !!! Note
     This list does **NOT** include the RapidBlock list, so we combine it with the above list, using a `max` merge plan
 
-#### Selecting a Merge Plan
-
-One of the great features of FediBlockHole is the ability to specify a `mergeplan` setting of `min` or `max` when combining lists from multiple sources. The default is `max`.
-
-The difference between the two is how FediBlockHole resolves the conflict when the same block is encountered from different sources with different [severities](https://docs.joinmastodon.org/admin/moderation/#server-wide-moderation). A `max` merge plan selects the **highest** of the severity levels from all sources of the same block, while a `min` merge plan selects the **lowest**.
-
-We have opted to implement a `max` merge plan for our lists.
-
-[^1]: We are keen to add more - please [let us know](mailto:cunningpike@gmail.com) if there are any that should be added. Our worldview is regrettably US-centric, and there are likely many others that we have missed.
+[^1]: We are keen to add more - please [let us know](mailto:cunningpike@gmail.com) if there are any that should be added. Our worldview is regrettably Western-centric, and there are likely many others that we have missed.
 [^2]: This list is subject to change without notice, but we will keep our documentation of it, both here and on our instances, up to date.
 [^3]: We haven't tried this ourselves so, if you do, [let us know](mailto:cunningpike@gmail.com) how it went!
 [^4]: Hat tip to [oliphant@oliphant.social](https://oliphant.social/@oliphant) for pointing us at this!

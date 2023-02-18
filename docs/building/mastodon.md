@@ -30,7 +30,7 @@ spec:
 ```
 ## Platform Namespace
 
-Next, we will need to create a [Kubernetes namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) for all the resources for our Mastodon instance. Namespaces create a logical boundary within your cluster, grouping related resources together:
+Next, we will need to create a [Kubernetes namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) for all the resources in our Mastodon instance. Namespaces create a logical boundary within your cluster, grouping related resources together:
 
 ```yaml title="/clusters/{my-cluster}/namespaces/namespace-mastodon.yaml"
 apiVersion: v1
@@ -301,7 +301,7 @@ You will want to set the `local_domain:` (and `web_domain:`, if it's different) 
 You will also need to pick the `username:` and `email:` for the Mastodon account that will be the initial admin user for the instance. You can add other users to various roles in the instance once it's running.
 
 !!! Note
-    Our install didn't create this user - if this happens to you, there is a workaround that you can do once your instance is running.
+    Our install didn't create this user - if this happens to you, there is a [workaround](/operating/mastodon/#administrator-access) that you can do once your instance is running.
 
 #### Secrets
 
@@ -340,7 +340,7 @@ Note that the `ingress.enabled:` value is set to `false`. The chart doesn't cont
 
 #### Elastic Search
 
-We also left `elasticsearch.enabled:` set to `false`. Elastic requires its own cluster, which would have increased our initial hosting costs considerably. We may add this feature (which allows users to perform full-text searches on their timelines) at some point.
+We also left `elasticsearch.enabled:` set to `false`. Elastic requires its own cluster, which would have increased our initial hosting costs considerably. We may add this feature (which allows users to perform full-text searches on their own timelines) at some point.
 
 Now, let's walk through the specifics of how we configured Mastodon to deploy with the various services (AWS SES, Cloud Storage, and Cloud SQL) that we prepared earlier.
 
@@ -428,7 +428,7 @@ postgresql:
   # existingSecret: ""
 ```
 
-The first thing to note is that `postgres.enabled:` is set to `false`. This seems counter-intuitive - after all, we need a PostgreSQL database for the thing to work. In this case, the `enabled:` setting really tells the Mastodon deployment whether or not to enable a database locally in the cluster or not. In our deployment, we did not want that - we wanted to use the Cloud SQL database that we already created.
+The first thing to note is that `postgres.enabled:` is set to `false`. This seems counter-intuitive - after all, we need a PostgreSQL database for the thing to work. In this case, the `enabled:` setting really tells the Mastodon deployment whether or not to instantiate a database locally in the cluster or not. In our deployment, we did not want that - we wanted to use the Cloud SQL database that we already created.
 
 The `postgresqlHostname:` setting will be the internal IP address of your PostgreSQL instance.
 
@@ -501,14 +501,14 @@ With all this in place, here is the sequence of events:
 - The `healthChecks` in the Kustomization are run to make sure everything deployed successfully.
 
 !!! Note
-    The **platform** repository is itself monitored for changes every `interval: 15m`, and changes in that will also trigger a Flux reconcilliation. If you want to avoid unexpected upgrades, you can specify [a valid `image.tag`](https://hub.docker.com/r/tootsuite/mastodon/tags) in your ConfigMap. This is particularly important now that v4.1 is imminent, and the published Helm Chart could change without warning.
+    The **platform** repository is itself monitored for changes every `interval: 15m`, and changes in that will also trigger a Flux reconcilliation. If you want to avoid unexpected upgrades, you can specify [a valid `image.tag`](https://hub.docker.com/r/tootsuite/mastodon/tags) in your ConfigMap. This is particularly important now that v4.1 is released, and the published Helm Chart could change without warning.
 
 ## Deploying Mastodon
 
 You can either wait for Flux to detect your changes, or you can speed up the process by running the following from your CLI machine:
 
 ```bash
-flux reconcile source git flux-system
+flux reconcile kustomization mastodon --with-source
 ```
 
 You can see the Mastodon pods by running the following from your CLI machine (or looking in your GKE console):
@@ -532,7 +532,7 @@ mastodon-web-56cc95dd99-n524q                 1/1     Running
 mastodon-web-56cc95dd99-vmkxf                 1/1     Running
 ```
 
-That's it! You're done deploying your Mastodon instance on GKE! Now, we need to make sure people can access it.
+That's it! You're done deploying your Mastodon instance on GKE! Now, we need to make sure people can access it from the public Internet.
 
 ## Ingress
 
@@ -576,14 +576,14 @@ Once it's all up and running, you should be able to connect to your instance fro
 
 For GOVSocial.org, we wanted our user accounts to have the scheme `{username}@govsocial.org`, rather than having the full domain of each platform in them, like `{username}@{platform}.govsocial.org`. This means that our `local_domain` in Mastodon is `govsocial.org`, while our `web_domain` is `mastodon.govsocial.org`.
 
-This poses challenges for federation, as any links to user profiles on other instances will intially connect to `govsocial.org` (the `local_domain`) instead of our `web_domain` and will need to be redirected. This redirection is handled by a [`webfinger` service in Mastodon](https://docs.joinmastodon.org/spec/webfinger/).
+This poses challenges for federation, as any links to user profiles on other instances will intially connect to `govsocial.org` (the `local_domain`) instead of our `web_domain` and will need to be redirected. This redirection is handled by a `webfinger` [service in Mastodon](https://docs.joinmastodon.org/spec/webfinger/).
 
 The load balancer needs to redirect requests for `govsocial.org/.well-known/webfinger` (which is where other instances think it is based on our username scheme) to `mastodon.govsocial.org/.well-known/webfinger` (where the service is actually listening).
 
 To do this, we deployed an `HTTPS (classic) Load Balancer` in the `Network Services -> Load Balancing` menu in our Google Cloud Console. The setup is very similar to the [Ingress we set up earlier](#ingress_1). In fact, you will see the load balancer created by the Ingress in the list when you go there.
 
 !!! Warning
-    Don't mess with it :-) If you're the sort of person who can't help pressing big red buttons that say "DO NOT PRESS", it's okay - anything you change will eventually be reverted by the GKE configuration, but your ingress might be broken until that happens.
+    Don't mess with the Ingress-generated load balancer :-) If you're the sort of person who can't help pressing big red buttons that say "DO NOT PRESS", it's okay - anything you change will eventually be reverted by the GKE configuration, but your ingress might be broken until that happens.
 
 Create a new `HTTPS (classic) Load Balancer` (this one supports the hostname and path redirect features we need). Despite the higher cost, we selected the Premium network tier, as it allows for the addition of services like [Cloud Armor](https://cloud.google.com/armor/docs/cloud-armor-overview) and [Cloud CDN](https://cloud.google.com/cdn/docs/overview) if the platform needs it in the future.
 

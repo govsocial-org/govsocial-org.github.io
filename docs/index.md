@@ -25,11 +25,11 @@ As public servants ourselves, we believe in the [US Digital Service](https://www
 
 Our instance federation and moderation polices are stricter than many general use instances.
 
-It is a requirement that you sign up with your work email address to verify your identity as a public service employee. .gov, .gc.ca, .gov.au, .gov.uk, and europa.eu email addresses are automatically approved, while others will be manually approved, based on cross-checking the domain part of the email address with that of the organization's public website, and confirming that the organization is a public service organization.
+It is a requirement that you sign up with your work email address to verify your identity as a public service employee. **.gov**, **.gc.ca**, **.gov.au**, **.gov.uk**, and **.europa.eu** email addresses **are automatically approved**. Other sign-ups will be manually approved, based on cross-checking the domain part of the email address with that of the organization's public website, and confirming that the organization is a public service organization.
 
-You must also use your real name, and the use of official headshots or logos for account avatars is strongly encouraged. You are also encouraged to use your profile to provide links (verified, if possible) back to the appropriate pages on your organization's website, your LinkedIn profile, and any others that provide confidence to other users that you are who you say you are.
+**You must also use your real name**, and the use of official headshots or logos for account avatars is strongly encouraged. You are also encouraged to use your profile to provide links (verified, if possible) back to the appropriate pages on your organization's website, your LinkedIn profile, and any others that provide confidence to other users that you are who you say you are.
 
-All content must be appropriate for your work environment, and in keeping with your presence on our instances as a verified public service employee. You may also want to check with your organization's social media policy before registering.
+**All content must be appropriate for your work environment**, and in keeping with your presence on our instances as a verified public service employee. You may also want to check with your organization's social media policy before registering.
 
 Organizational accounts and bots are encouraged, provided they meet the same requirements as individual accounts, and follow the instance rules.
 

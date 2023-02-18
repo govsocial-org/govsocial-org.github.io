@@ -53,7 +53,7 @@ nav:
         - FediBlockHole: building/fediblockhole.md         
     - Operating GOVSocial:
       - operating/index.md
-      - General:
+      - General Operations:
         - Documentation: operating/documentation.md
         - Dashboards:
           - operating/dashboards.md
@@ -61,7 +61,7 @@ nav:
           - Cloud SQL: operating/dashboards/cloudsql.md
           - Cloud Storage: operating/dashboards/cloudstorage.md
           - Mastodon: operating/dashboards/mastodon.md
-      - Instances:
+      - Instance Operations:
         - Mastodon: operating/mastodon.md
     #- Financing GOVSocial:
     #  - financing/index.md
@@ -107,8 +107,8 @@ theme:
     # Toggle light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: 'deep purple'
-      accent: 'deep purple'
+      #primary: 'indigo'
+      #accent: 'red'
       toggle:
         icon: material/brightness-7
         name: Burn my eyes!
@@ -116,8 +116,8 @@ theme:
     # Toggle dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: 'deep purple'
-      accent: 'deep purple'
+      #primary: 'indigo'
+      #accent: 'red'
       toggle:
         icon: material/brightness-4
         name: Love my eyes!
@@ -157,6 +157,8 @@ extra:
 
 extra_css:
   - extras/css/icons.css
+  - stylesheets/govsocial.css
+
 
 extra_javascript:
   - extras/javascript/plausible.js

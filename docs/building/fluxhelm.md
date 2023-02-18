@@ -46,7 +46,7 @@ When bootstrapped as detailed below, your repo will be used for all your Flux de
 Flux uses a `classic` Personal Access Token (PAT) created for the personal GitHub account you use to access this repo. PATs are created and maintained in `<> Developer Settings` at the very bottom of the Settings menu for your account (accessed by clicking on your avatar at the top right of your GitHub window and choosing `Settings`). The PAT will need the full `repo` role.
 
 !!! Warning
-    **Make a note of the token (it will start with `gpg_`) - you will only be shown it once.**
+    **Make a note of the token (it will start with** `gpg_`**) - you will only be shown it once.**
 
 By default, the PAT will expire every 30 days. You will get an email from GitHub 7 days before it expires. [To rotate it](https://github.com/fluxcd/flux2/discussions/2161):
 

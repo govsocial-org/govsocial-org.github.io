@@ -7,7 +7,7 @@ title: Building a k8s FediBlockHole Cron Job
 
 FediBlockHole is a Python tool that is designed to be installed on a machine and run from the command line. We could have installed it on our CLI VM and run it from there with a crontab entry to automate it, but there are a couple of disadvantages with this approach. Firstly, it would require our VM to be more stable than a [spot VM](https://cloud.google.com/compute/docs/instances/spot), increasing our hosting costs. Secondly, the supported VM image in GCP comes with Python 3.9.x, and FediBlockHole requires at least version 3.10.
 
-Rather than embarking on that expedition, we decided to containerize FediBlockHole, and deploy a Kubernetes cron job that instantiates the container and runs the script.
+Rather than embarking on *that* expedition, we decided to containerize FediBlockHole, and deploy a Kubernetes cron job that instantiates the container and runs the script.
 
 !!! Note
     When we did this, we **forked** rather than **cloning** the [FediBlockHole repo](https://github.com/eigenmagic/fediblockhole) into [our own repo](https://github.com/cunningpike/fediblockhole). We wanted to submit a [pull request](https://github.com/eigenmagic/fediblockhole/pull/38) for ingrating our work back into the original project, and to keep our repo up to date with it. The following documentation is from that perspective. All repo paths are relative to the root of our forked repo.
