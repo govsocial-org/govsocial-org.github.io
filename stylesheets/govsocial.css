@@ -1,0 +1,42 @@
+:root {
+  --md-primary-fg-color:        #0A3161;
+  --md-primary-fg-color--light: #0A3161;
+  --md-primary-fg-color--dark:  #0A3161;
+
+  --md-accent-fg-color:                #B31942;
+  --md-accent-fg-color--transparent:   #B31942;
+}
+
+li > code {
+  color: #B31942 !important;
+}
+
+p code {
+  color: #B31942 !important;
+}
+
+.md-typeset .admonition.note,
+.md-typeset details.note {
+  border-color: #0A3161;
+}
+.md-typeset .note > .admonition-title,
+.md-typeset .note > summary {
+  background-color: #0A31612a;
+}
+.md-typeset .note > .admonition-title::before,
+.md-typeset .note > summary::before {
+  background-color: #0A3161;
+}
+
+.md-typeset .admonition.danger,
+.md-typeset details.danger {
+  border-color: #B31942;
+}
+.md-typeset .danger > .admonition-title,
+.md-typeset .danger > summary {
+  background-color: #B319423a;
+}
+.md-typeset .danger > .admonition-title::before,
+.md-typeset .danger > summary::before {
+  background-color: #B31942;
+}
