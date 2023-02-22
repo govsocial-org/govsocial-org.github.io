@@ -114,7 +114,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 1.0.0
+version: 1.1.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -184,6 +184,17 @@ fediblockhole:
   # location of the configuration file. Default is /etc/default/fediblockhole.conf.toml
   conf_file:
     path: ""
+    filename: ""
+  # Location of a local allowlist file. It is recommended that this file should at a
+  # minimum contain the web_domain of your own instance.
+  allow_file:
+    # Optionally, set the name of the file. This should match the data key in the
+    # associated ConfigMap
+    filename: "allowlist.csv"
+  # Location of a local blocklist file.
+  block_file:
+    # Optionally, set the name of the file. This should match the data key in the
+    # associated ConfigMap
     filename: ""
   cron:
     # -- run `fediblock-sync` every hour
@@ -258,6 +269,8 @@ metadata:
     {{- include "fediblockhole.labels" . | nindent 4 }}
 spec:
   schedule: {{ .Values.fediblockhole.cron.sync.schedule }}
+  failedJobsHistoryLimit: {{ .Values.fediblockhole.cron.sync.failedJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.fediblockhole.cron.sync.successfulJobsHistoryLimit }}
   jobTemplate:
     spec:
       template:
@@ -279,7 +292,18 @@ spec:
                 - "{{- include "fediblockhole.conf_file_path" . -}}{{- include "fediblockhole.conf_file_filename" . -}}"
               volumeMounts:
                 - name: config
-                  mountPath: {{ include "fediblockhole.conf_file_path" . | quote }}
+                  mountPath: "{{- include "fediblockhole.conf_file_path" . -}}{{- include "fediblockhole.conf_file_filename" . -}}"
+                  subPath: "{{- include "fediblockhole.conf_file_filename" . -}}"
+                {{ if .Values.fediblockhole.allow_file.filename }}
+                - name: allowfile
+                  mountPath: "{{- include "fediblockhole.conf_file_path" . -}}{{- .Values.fediblockhole.allow_file.filename -}}"
+                  subPath: "{{- .Values.fediblockhole.allow_file.filename -}}"
+                {{ end }}
+                {{ if .Values.fediblockhole.block_file.filename }}
+                - name: blockfile
+                  mountPath: "{{- include "fediblockhole.conf_file_path" . -}}{{- .Values.fediblockhole.block_file.filename -}}"
+                  subPath: "{{- .Values.fediblockhole.block_file.filename -}}"
+                {{ end }}
           volumes:
             - name: config
               configMap:
@@ -287,6 +311,22 @@ spec:
                 items:
                 - key: {{ include "fediblockhole.conf_file_filename" . | quote }}
                   path: {{ include "fediblockhole.conf_file_filename" . | quote }}
+            {{ if .Values.fediblockhole.allow_file.filename }}
+            - name: allowfile
+              configMap:
+                name: {{ include "fediblockhole.fullname" . }}-allow-csv
+                items:
+                - key: {{ .Values.fediblockhole.allow_file.filename | quote }}
+                  path: {{ .Values.fediblockhole.allow_file.filename | quote }}
+            {{ end }}
+            {{ if .Values.fediblockhole.block_file.filename }}
+            - name: blockfile
+              configMap:
+                name: {{ include "fediblockhole.fullname" . }}-block-csv
+                items:
+                - key: {{ .Values.fediblockhole.block_file.filename | quote }}
+                  path: {{ .Values.fediblockhole.block_file.filename | quote }}
+            {{ end }}
 {{- end }}
 {% endraw %}
 ```
@@ -376,7 +416,7 @@ You can see how values from both the [Chart file](#chart-file) and the [Values f
 
 A slightly different syntax for defining defaults and overrides is highlighted above, showing how the local path and filename for the FediBlockHole configuration has a default value of `/etc/default/fediblockhole.conf.toml` from the [Chart file](#chart-file) if a value is not set in the [Values file](#values-file).
 
-#### Configuration File
+#### Configuration Files
 
 As pointed out at the start, FediBlockHole was intended to be deployed on a machine with a persistant storage system, and read a [TOML-formatted](https://toml.io/en/v1.0.0) configuration file from a local filepath. This poses a challenge when containerizing it, as we need to be able to easily make changes to the configuration file and redeploy the cron job with the updated values into the pod's local file system where the script expects to find it. We also want to make sure that the container is rebuilt with the new configuration file when the changes are made to it.
 
@@ -406,7 +446,18 @@ spec:
     ...
       volumeMounts:
         - name: config
-          mountPath: {{ include "fediblockhole.conf_file_path" . | quote }}
+          mountPath: "{{- include "fediblockhole.conf_file_path" . -}}{{- include "fediblockhole.conf_file_filename" . -}}"
+          subPath: "{{- include "fediblockhole.conf_file_filename" . -}}"
+        {{ if .Values.fediblockhole.allow_file.filename }}
+        - name: allowfile
+          mountPath: "{{- include "fediblockhole.conf_file_path" . -}}{{- .Values.fediblockhole.allow_file.filename -}}"
+          subPath: "{{- .Values.fediblockhole.allow_file.filename -}}"
+        {{ end }}
+        {{ if .Values.fediblockhole.block_file.filename }}
+        - name: blockfile
+          mountPath: "{{- include "fediblockhole.conf_file_path" . -}}{{- .Values.fediblockhole.block_file.filename -}}"
+          subPath: "{{- .Values.fediblockhole.block_file.filename -}}"
+        {{ end }}
   volumes:
     - name: config
       configMap:
@@ -414,8 +465,26 @@ spec:
         items:
         - key: {{ include "fediblockhole.conf_file_filename" . | quote }}
           path: {{ include "fediblockhole.conf_file_filename" . | quote }}
+    {{ if .Values.fediblockhole.allow_file.filename }}
+    - name: allowfile
+      configMap:
+        name: {{ include "fediblockhole.fullname" . }}-allow-csv
+        items:
+        - key: {{ .Values.fediblockhole.allow_file.filename | quote }}
+          path: {{ .Values.fediblockhole.allow_file.filename | quote }}
+    {{ end }}
+    {{ if .Values.fediblockhole.block_file.filename }}
+    - name: blockfile
+      configMap:
+        name: {{ include "fediblockhole.fullname" . }}-block-csv
+        items:
+        - key: {{ .Values.fediblockhole.block_file.filename | quote }}
+          path: {{ .Values.fediblockhole.block_file.filename | quote }}
+    {{ end }}
 {% endraw %}
 ```
+
+There are similar `volumeMounts` and `volumes` entries for optional local allow and block list files that are mounted and populated from ConfigMaps the same way.
 
 Finally, we set the container to [restart when a change to the ConfigMap is detected](https://renehernandez.io/notes/rolling-pods-config-changes/) by [annotating](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) it with the checksum of the ConfigMap:
 

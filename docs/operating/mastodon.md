@@ -408,39 +408,7 @@ We have opted to implement a `max` merge plan for our lists.
 
 Server moderation in the Fediverse is a little like spam filtering for email servers. It is generally up to each individual mailop to decide and implement their own spam filtering policy, with widely varying results. Over time, trusted lists of "known bad" servers (such as [these](https://mxtoolbox.com/problem/blacklist/)) have evolved to provide a more consistent and centralized way of filtering traffic from poorly-behaved MTAs.
 
-[The RapidBlock Project](https://rapidblock.org/) is an equivalent of this for Mastodon instances, and was a clear choice for us. You can see where we pull this list in our [FediBlockHole configuration file](/building/fediblockhole/#deploying-fediblockhole) here:
-
-```toml
-blocklist_url_sources = [
-  # { url = 'file:///path/to/fediblockhole/samples/demo-blocklist-01.csv', format = 'csv' },
-  { url = 'https://rapidblock.org/blocklist.json', format = 'rapidblock.json' },
-]
-```
-
-The `rapidblock.json` format is specific to RapidBlock (it is designed for use by Fediverse platforms as a whole, and not just Mastodon), and looks like this:
-
-``` {.json .no-copy}
-{
-  "@spec": "https://rapidblock.org/spec/v1/",
-  "publishedAt": "2022-12-29T18:40:02.065805293Z",
-  "blocks": {
-    "101010.pl": {
-      "isBlocked": true,
-      "reason": "cryptomining javascript, white supremacy",
-      "tags": [
-        "antisemitism",
-        "malware",
-        "racism"
-      ],
-      "dateRequested": "2022-11-16T00:00:00Z",
-      "dateDecided": "2022-11-16T00:00:00Z"
-    ...
-```
-
-!!! Note
-    Mastodon server moderation has severity levels that are explained [here](https://docs.joinmastodon.org/admin/moderation/#server-wide-moderation), but you will notice from the sample RapidBlock file that no severity level is specified. This means that FediBlockHole will use the `max_severity` configuration setting, which is `suspend` by default and, if users on your instance are following accounts from the moderated domain, the `max_followed_severity` setting which defaults to `silence`.
-
-We also came across a set of consolidated blocklists created (using FediBlockHole) from the server block lists from various "tiers" of Mastodon instances. [The Oliphant Social Blocklist](https://writer.oliphant.social/oliphant/the-oliphant-social-blocklist) provides a number of different lists using different tiers and [merge plans](#selecting-a-merge-plan) for each.
+We came across a set of consolidated blocklists created (using FediBlockHole) from the server block lists from various "tiers" of Mastodon instances. [The Oliphant Social Blocklist](https://writer.oliphant.social/oliphant/the-oliphant-social-blocklist) provides a number of different lists using different tiers and [merge plans](#selecting-a-merge-plan) for each.
 
 And here is where the fun started. Being new, and sensitive to our goal of creating an instance safe for public service users and agencies using their public personas, we initially selected the [Unified Max Block List](https://codeberg.org/oliphant/blocklists/raw/branch/main/blocklists/_unified_max_blocklist.csv). This is all blocks from all tiers, using a `max` merge plan.
 
@@ -448,7 +416,7 @@ This resulted in a huge blocklist, including the instance (mstdn.ca) where at le
 
 Luckily, there is a [collection of Python-based utilities](https://github.com/ineffyble/mastodon-block-tools), from which we got a [script](https://github.com/chdorner/secretbearsociety/blob/main/clear-blocks.py) that, once we added a timeout to avoid tripping the rate-limit on our API, did the trick.
 
-We now use the much more limited but still effective [Unified Min Blocklist](https://codeberg.org/oliphant/blocklists/raw/branch/main/blocklists/_unified_max_blocklist.csv), which combines block lists from tiers 0 through 2 servers with a `min` merge plan. You can see where we pull this list in our [FediBlockHole configuration file](/building/fediblockhole/#deploying-fediblockhole) here:
+We now use the much more limited but still effective [Unified Min Blocklist](https://codeberg.org/oliphant/blocklists/raw/branch/main/blocklists/_unified_max_blocklist.csv), which combines block lists from Tier 0 servers with a `min` merge plan. You can see where we pull this list in our [FediBlockHole configuration file](/building/fediblockhole/#deploying-fediblockhole) here:
 
 ```toml
 blocklist_url_sources = [
@@ -457,8 +425,42 @@ blocklist_url_sources = [
 ]
 ``` 
 
+#### Local Lists
+
+The Helm chart we [created](/building/fediblockhole/) includes the ability to mount local CSV files from ConfigMaps to serve as allow and block lists.
+
+!!! Danger "Danger, Will Robinson"
+    When using FediBlockHole, it is imperative that, at a minimum, you add your own instance to an allow list to prevent you from inadvertently blocking yourself if you pull a list on which your server is listed.
+
+In order to do this, we set the file name of the allow list file in our Helm chart values override:
+
+```yaml title="/fediblockhole/configmap-fediblockhole-helm-chart-value-overrides.yaml" hl_lines="6"
+# Location of a local allowlist file. It is recommended that this file should at a
+# minimum contain the web_domain of your own instance.
+allow_file:
+  # Optionally, set the name of the file. This should match the data key in the
+  # associated ConfigMap
+  filename: "allowlist.csv"
+```
+
+We then created the corresponding ConfigMap:
+
+```yaml title="/fediblockhole/configmap-fediblockhole-allow-csv.yaml" hl_lines="7"
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fediblockhole-allow-csv
+  namespace: fediblockhole
+data:
+  allowlist.csv: |-  
+    "domain","private_comment"
+    "mastodon.govsocial.org","It's smart to list your own instance so you don't block yourself."
+```
+
 !!! Note
-    This list does **NOT** include the RapidBlock list, so we combine it with the above list, using a `max` merge plan
+    Make sure that the file name in the two lines highlighted above match!
+
+You can, of course add as many entries to this file, and the corresponding block file, as you wish.
 
 [^1]: We are keen to add more - please [let us know](mailto:cunningpike@gmail.com) if there are any that should be added. Our worldview is regrettably Western-centric, and there are likely many others that we have missed.
 [^2]: This list is subject to change without notice, but we will keep our documentation of it, both here and on our instances, up to date.
