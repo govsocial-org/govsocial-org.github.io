@@ -82,7 +82,7 @@ We also created a DNS entry and [HTTPS Ingress](https://cloud.google.com/kuberne
 When you get Grafana running, you will be presented with a login screen. Because we implemented in GKE from a Helm chart which creates the `admin` user and generates a secret for it, we had no idea what it was, so we extracted it from the secret with this command:
 
 ```bash
-~$ kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+~$ kubectl get secret --namespace grafana grafana-admin -o jsonpath="{.data.GF_SECURITY_ADMIN_PASSWORD}" | base64 --decode ; echo
 ```
 
 Once that's done, you should be able to login to your Grafana instance and start dashboarding!
